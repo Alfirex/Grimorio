@@ -158,8 +158,8 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (canvas && map) renderDungeon(canvas, map, CELL);
-  }, [map]);
+    if (canvas && map) renderDungeon(canvas, map, CELL, board?.theme);
+  }, [map, board?.theme]);
 
   // Capa de alcance: verde = puede llegar, rojo = terreno que no puede recorrer
   useEffect(() => {
@@ -611,6 +611,8 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
                 const stats = statsOf(token);
                 const dead = stats.maxHp > 0 && stats.hp <= 0;
                 const hidden = isDM && hiddenFromPlayers(token);
+                // Retrato: avatar del personaje (jugadores) o ilustración del bestiario
+                const portrait = characterOf(token)?.avatar || token.image;
                 return (
                   <div
                     key={token.id}
@@ -624,13 +626,13 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
                     style={{
                       left: token.x * CELL,
                       top: token.y * CELL,
-                      background: token.image
-                        ? `${token.color} url(${token.image}) center / cover`
+                      background: portrait
+                        ? `${token.color} url(${portrait}) center / cover`
                         : token.color,
                     }}
                     title={`${token.name}${stats.maxHp > 0 ? ` · ${stats.hp}/${stats.maxHp} PG · CA ${stats.ac} · ${stats.speed} pies` : ""}${hidden ? " · 🕶 oculto para los jugadores" : ""}`}
                   >
-                    {dead ? "✕" : token.image ? "" : initials(token.name)}
+                    {dead ? "✕" : portrait ? "" : initials(token.name)}
                     {stats.maxHp > 0 && !dead && (
                       <span
                         className={styles.hpBar}

@@ -32,6 +32,7 @@ import {
   spellAttackBonus,
   spellSaveDC,
 } from "@/utils/character";
+import { fileToAvatar } from "@/utils/image";
 import type { AbilityKey, Campaign, Character } from "@/types";
 import { NotesPanel } from "./NotesPanel";
 import styles from "./CharacterSheet.module.scss";
@@ -136,6 +137,51 @@ export function CharacterSheet({ characterId }: { characterId: string }) {
         {/* ---------- Identidad ---------- */}
         <section className="panel">
           <h2 className="section-title">Identidad</h2>
+          <div className={styles.avatarRow}>
+            <div
+              className={styles.avatarPreview}
+              style={
+                character.avatar ? { backgroundImage: `url(${character.avatar})` } : undefined
+              }
+            >
+              {!character.avatar && "🎭"}
+            </div>
+            {isOwner && (
+              <div className={styles.avatarActions}>
+                <label className="btn btn--sm">
+                  {character.avatar ? "Cambiar foto" : "Subir foto"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      e.target.value = "";
+                      if (!file) return;
+                      try {
+                        const avatar = await fileToAvatar(file);
+                        set({ avatar });
+                      } catch {
+                        window.alert("No se pudo procesar esa imagen.");
+                      }
+                    }}
+                  />
+                </label>
+                {character.avatar && (
+                  <button
+                    type="button"
+                    className="btn btn--danger btn--sm"
+                    onClick={() => set({ avatar: "" })}
+                  >
+                    Quitar
+                  </button>
+                )}
+                <p className={styles.avatarHint}>
+                  Se verá en tu ficha del tablero. Se recorta y comprime automáticamente.
+                </p>
+              </div>
+            )}
+          </div>
           <div className={styles.identityGrid}>
             <label>
               <span className="field-label">Nombre</span>

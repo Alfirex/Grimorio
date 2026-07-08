@@ -53,6 +53,7 @@ export interface Character {
 
   // Identidad
   name: string;
+  avatar?: string; // retrato como data-URL comprimido (128px)
   race: string;
   characterClass: string;
   subclass: string;
@@ -119,6 +120,8 @@ export interface BoardConfig {
   roomAttempts: number;
   minRoomSize: number;
   maxRoomSize: number;
+  /** Ambientación visual: mazmorra, cueva, castillo, bosque… */
+  theme?: string;
 }
 
 export interface BoardToken {

@@ -6,7 +6,7 @@ import { RequireAuth } from "@/components/auth/RequireAuth";
 import { useAuth } from "@/context/AuthContext";
 import { setCampaignBoard, subscribeMyCampaigns } from "@/lib/db";
 import { generateDungeon, type DungeonMap } from "@/utils/mapgen";
-import { renderDungeon } from "@/utils/renderDungeon";
+import { DEFAULT_THEME, renderDungeon, THEMES } from "@/utils/renderDungeon";
 import type { BoardConfig, Campaign } from "@/types";
 import styles from "./page.module.scss";
 
@@ -40,6 +40,7 @@ function MapGenerator() {
   const [minRoomSize, setMinRoomSize] = useState(DEFAULT_OPTIONS.minRoomSize);
   const [maxRoomSize, setMaxRoomSize] = useState(DEFAULT_OPTIONS.maxRoomSize);
   const [seedInput, setSeedInput] = useState(String(INITIAL_SEED));
+  const [theme, setTheme] = useState(DEFAULT_THEME);
   // Parámetros exactos del mapa mostrado, para poder usarlo como tablero
   const [boardConfig, setBoardConfig] = useState<BoardConfig>({
     ...DEFAULT_OPTIONS,
@@ -68,8 +69,8 @@ function MapGenerator() {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (canvas) renderDungeon(canvas, map, CELL_SIZE);
-  }, [map]);
+    if (canvas) renderDungeon(canvas, map, CELL_SIZE, theme);
+  }, [map, theme]);
 
   const handleDownload = () => {
     const canvas = canvasRef.current;
@@ -110,6 +111,17 @@ function MapGenerator() {
           </Control>
 
           <label>
+            <span className="field-label">Ambientación</span>
+            <select className="input" value={theme} onChange={(e) => setTheme(e.target.value)}>
+              {Object.entries(THEMES).map(([id, def]) => (
+                <option key={id} value={id}>
+                  {def.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label>
             <span className="field-label">Semilla</span>
             <input
               className="input"
@@ -135,7 +147,7 @@ function MapGenerator() {
             {map.rooms.length} salas · semilla {map.seed}
           </p>
 
-          {user && <SendToCampaign uid={user.uid} boardConfig={boardConfig} />}
+          {user && <SendToCampaign uid={user.uid} boardConfig={{ ...boardConfig, theme }} />}
         </aside>
 
         <div className={`panel ${styles.canvasWrap}`}>

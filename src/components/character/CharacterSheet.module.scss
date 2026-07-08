@@ -53,6 +53,45 @@
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 }
 
+.avatarRow {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.avatarPreview {
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.35);
+  background-position: center;
+  background-size: cover;
+  border: 2px solid $color-border-light;
+  border-radius: 50%;
+  display: flex;
+  flex-shrink: 0;
+  font-size: 2rem;
+  height: 88px;
+  justify-content: center;
+  width: 88px;
+}
+
+.avatarActions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+
+  label {
+    cursor: pointer;
+  }
+}
+
+.avatarHint {
+  color: $color-muted;
+  font-size: 0.72rem;
+  width: 100%;
+}
+
 .inspiration {
   align-items: center;
   display: flex;
