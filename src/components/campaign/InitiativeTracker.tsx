@@ -1,14 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import type { Character, Combatant } from "@/types";
+import type { BoardToken, Character, Combatant } from "@/types";
 import styles from "./InitiativeTracker.module.scss";
+
+interface InitiativeTrackerProps {
+  characters: Character[];
+  /** Fichas enemigas del tablero, para importarlas al encuentro. */
+  enemyTokens?: BoardToken[];
+}
 
 /**
  * Rastreador de iniciativa para el máster. Es una herramienta de sesión:
  * el estado vive en memoria y se reinicia al recargar la página.
  */
-export function InitiativeTracker({ characters }: { characters: Character[] }) {
+export function InitiativeTracker({ characters, enemyTokens = [] }: InitiativeTrackerProps) {
   const [combatants, setCombatants] = useState<Combatant[]>([]);
   const [turnIndex, setTurnIndex] = useState(0);
   const [round, setRound] = useState(1);
@@ -54,6 +60,23 @@ export function InitiativeTracker({ characters }: { characters: Character[] }) {
       );
   };
 
+  const importEnemies = () => {
+    const existing = new Set(combatants.map((c) => c.id));
+    enemyTokens
+      .filter((token) => !existing.has(token.id) && (token.hp ?? 0) > 0)
+      .forEach((token) =>
+        addCombatant({
+          id: token.id,
+          name: token.name,
+          // El máster tira la iniciativa de sus monstruos: d20 al importar
+          initiative: 1 + Math.floor(Math.random() * 20),
+          hp: token.hp ?? 0,
+          maxHp: token.maxHp ?? token.hp ?? 0,
+          isPlayer: false,
+        })
+      );
+  };
+
   const updateCombatant = (id: string, patch: Partial<Combatant>) => {
     setCombatants((prev) => prev.map((c) => (c.id === id ? { ...c, ...patch } : c)));
   };
@@ -88,6 +111,15 @@ export function InitiativeTracker({ characters }: { characters: Character[] }) {
             disabled={characters.length === 0}
           >
             + Jugadores
+          </button>
+          <button
+            type="button"
+            className="btn btn--sm"
+            onClick={importEnemies}
+            disabled={enemyTokens.filter((t) => (t.hp ?? 0) > 0).length === 0}
+            title="Importa los enemigos vivos del tablero y tira su iniciativa (d20)"
+          >
+            + Enemigos
           </button>
           <button
             type="button"

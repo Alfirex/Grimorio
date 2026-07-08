@@ -27,8 +27,13 @@ service cloud.firestore {
 
       allow create: if signedIn() && request.resource.data.ownerUid == request.auth.uid;
 
-      // Escribir/borrar: solo el dueño
-      allow update, delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
+      // Editar: el dueño, o el máster de su campaña (daño en combate, ajustes de mesa)
+      allow update: if signedIn() &&
+        (resource.data.ownerUid == request.auth.uid ||
+         isCampaignDM(resource.data.campaignId));
+
+      // Borrar: solo el dueño
+      allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
 
       match /notes/{noteId} {
         function characterData() {
@@ -60,7 +65,8 @@ service cloud.firestore {
       allow update: if signedIn() &&
         (resource.data.dmUid == request.auth.uid ||
          (request.auth.uid in resource.data.memberUids &&
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['tokens'])) ||
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['tokens', 'boardLog', 'revealedRooms'])) ||
          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberUids']) &&
           request.resource.data.memberUids.hasAll(resource.data.memberUids) &&
           request.auth.uid in request.resource.data.memberUids));

@@ -128,6 +128,20 @@ export interface BoardToken {
   color: string;
   x: number;
   y: number;
+  // PG, CA y velocidad propios solo para enemigos; las fichas de jugador los leen de su personaje
+  hp?: number;
+  maxHp?: number;
+  ac?: number;
+  speed?: number; // en pies (una casilla = 5 pies)
+  attacks?: Attack[]; // ataques del bestiario (enemigos)
+  abilities?: string[]; // hechizos, trucos y rasgos (referencia del máster)
+  loot?: string; // expresión de dados de monedas de oro que suelta al morir
+}
+
+export interface BoardLogEntry {
+  id: string;
+  text: string;
+  timestamp: number;
 }
 
 export interface Campaign {
@@ -141,6 +155,9 @@ export interface Campaign {
   createdAt: number;
   board?: BoardConfig | null;
   tokens?: Record<string, BoardToken>;
+  boardLog?: BoardLogEntry[];
+  /** Índices de salas ya descubiertas por los jugadores (niebla de guerra). */
+  revealedRooms?: number[];
 }
 
 export interface Combatant {

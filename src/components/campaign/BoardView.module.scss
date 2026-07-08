@@ -94,3 +94,155 @@
   box-shadow: 0 0 0 3px rgba($color-gold, 0.45), 0 2px 8px rgba(0, 0, 0, 0.6);
   z-index: 2;
 }
+
+.tokenDead {
+  filter: grayscale(1) brightness(0.6);
+}
+
+// Solo lo ve el DM: enemigo aún invisible para los jugadores
+.tokenHidden {
+  border-color: $color-gold-light;
+  border-style: dashed;
+  opacity: 0.8;
+
+  &::after {
+    content: "🕶";
+    font-size: 0.6rem;
+    position: absolute;
+    right: -4px;
+    top: -6px;
+  }
+}
+
+.roomSelect {
+  width: 7rem;
+}
+
+.creatureSelect {
+  width: 14rem;
+}
+
+.lootRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.abilityList {
+  color: $color-muted;
+  display: grid;
+  font-size: 0.78rem;
+  gap: 0.15rem;
+}
+
+.freeMove {
+  align-items: center;
+  color: $color-muted;
+  display: flex;
+  font-size: 0.75rem;
+  gap: 0.3rem;
+  text-transform: uppercase;
+}
+
+.notice {
+  background: rgba($color-blood, 0.15);
+  border: 1px solid rgba($color-blood-light, 0.5);
+  border-radius: $radius-sm;
+  color: $color-blood-light;
+  font-size: 0.82rem;
+  margin-bottom: 0.6rem;
+  padding: 0.4rem 0.7rem;
+}
+
+.hpBar {
+  background: #4ac24a;
+  border-radius: 2px;
+  bottom: -5px;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+  height: 3px;
+  left: 0;
+  position: absolute;
+}
+
+.statInput {
+  text-align: center;
+  width: 4.2rem;
+}
+
+.attackPanel {
+  background: rgba($color-blood, 0.08);
+  border: 1px solid rgba($color-blood-light, 0.5);
+  border-radius: $radius-md;
+  display: grid;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+  padding: 0.8rem 1rem;
+}
+
+.attackHeader {
+  align-items: center;
+  color: $color-cream;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: space-between;
+
+  strong {
+    color: $color-gold-light;
+  }
+}
+
+.attackMeta {
+  color: $color-muted;
+  font-size: 0.8rem;
+  font-style: normal;
+}
+
+.attackList {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.attackRow {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.attackName {
+  color: $color-cream;
+  font-family: $font-display;
+  font-size: 0.85rem;
+  min-width: 8rem;
+}
+
+.customAttack {
+  align-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.log {
+  border-top: 1px solid $color-border;
+  margin-top: 0.75rem;
+  padding-top: 0.6rem;
+}
+
+.logTitle {
+  @include ornament-title;
+  font-size: 0.7rem;
+  margin-bottom: 0.4rem;
+}
+
+.logEntry {
+  border-bottom: 1px solid rgba($color-border, 0.4);
+  color: $color-cream;
+  font-size: 0.82rem;
+  padding: 0.25rem 0;
+
+  &:first-child {
+    color: $color-gold-light;
+  }
+}

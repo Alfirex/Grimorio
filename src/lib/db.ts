@@ -15,6 +15,7 @@ import {
 import { getDb } from "@/lib/firebase";
 import type {
   BoardConfig,
+  BoardLogEntry,
   BoardToken,
   Campaign,
   Character,
@@ -187,9 +188,21 @@ export async function assignCharacterToCampaign(
 
 // ---------- Tablero ----------
 
-/** Coloca un mapa nuevo como tablero de la campaña (reinicia las fichas). */
+/** Coloca un mapa nuevo como tablero de la campaña (reinicia fichas y niebla). */
 export async function setCampaignBoard(campaignId: string, board: BoardConfig): Promise<void> {
-  await updateDoc(doc(getDb(), "campaigns", campaignId), { board, tokens: {} });
+  await updateDoc(doc(getDb(), "campaigns", campaignId), {
+    board,
+    tokens: {},
+    revealedRooms: [],
+    boardLog: [],
+  });
+}
+
+/** Marca una sala como descubierta por los jugadores. */
+export async function revealBoardRoom(campaignId: string, roomIndex: number): Promise<void> {
+  await updateDoc(doc(getDb(), "campaigns", campaignId), {
+    revealedRooms: arrayUnion(roomIndex),
+  });
 }
 
 export async function upsertBoardToken(campaignId: string, token: BoardToken): Promise<void> {
@@ -212,5 +225,30 @@ export async function moveBoardToken(
 export async function removeBoardToken(campaignId: string, tokenId: string): Promise<void> {
   await updateDoc(doc(getDb(), "campaigns", campaignId), {
     [`tokens.${tokenId}`]: deleteField(),
+  });
+}
+
+/** Ajusta los PG de una ficha enemiga (las de jugador usan su personaje). */
+export async function setBoardTokenHp(
+  campaignId: string,
+  tokenId: string,
+  hp: number
+): Promise<void> {
+  await updateDoc(doc(getDb(), "campaigns", campaignId), {
+    [`tokens.${tokenId}.hp`]: hp,
+  });
+}
+
+const MAX_BOARD_LOG = 20;
+
+/** Añade una entrada al registro de combate, manteniéndolo acotado. */
+export async function appendBoardLog(
+  campaignId: string,
+  currentLog: BoardLogEntry[],
+  text: string
+): Promise<void> {
+  const entry: BoardLogEntry = { id: crypto.randomUUID(), text, timestamp: Date.now() };
+  await updateDoc(doc(getDb(), "campaigns", campaignId), {
+    boardLog: [entry, ...currentLog].slice(0, MAX_BOARD_LOG),
   });
 }
