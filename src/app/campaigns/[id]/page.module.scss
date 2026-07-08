@@ -1,0 +1,111 @@
+@use "../../../styles/variables" as *;
+
+.info {
+  color: $color-muted;
+  font-style: italic;
+  margin-top: 4rem;
+  text-align: center;
+}
+
+.page {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.header {
+  align-items: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.title {
+  color: $color-gold;
+  font-size: 1.6rem;
+}
+
+.meta {
+  color: $color-muted;
+  font-size: 0.9rem;
+  margin-top: 0.2rem;
+}
+
+.headerActions {
+  align-items: center;
+  display: flex;
+  gap: 0.6rem;
+}
+
+.dmHint {
+  background: rgba($color-gold, 0.07);
+  border: 1px dashed rgba($color-gold, 0.4);
+  border-radius: $radius-md;
+  color: $color-cream;
+  font-size: 0.9rem;
+  padding: 0.7rem 1rem;
+
+  strong {
+    color: $color-gold-light;
+    letter-spacing: 0.15em;
+  }
+}
+
+.columns {
+  align-items: start;
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: 1fr;
+
+  @media (min-width: 900px) {
+    grid-template-columns: 3fr 2fr;
+  }
+}
+
+.sectionHeading {
+  color: $color-gold;
+  font-size: 1.05rem;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.9rem;
+  text-transform: uppercase;
+}
+
+.empty {
+  color: $color-muted;
+  font-style: italic;
+}
+
+.cards {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.charCard {
+  display: block;
+}
+
+.charTop {
+  align-items: center;
+  display: flex;
+  gap: 0.6rem;
+  justify-content: space-between;
+}
+
+.charName {
+  color: $color-cream;
+  font-family: $font-display;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.charMeta {
+  color: $color-muted;
+  font-size: 0.85rem;
+  margin-top: 0.15rem;
+}
+
+.charStats {
+  color: $color-gold-light;
+  font-size: 0.8rem;
+  margin-top: 0.4rem;
+}

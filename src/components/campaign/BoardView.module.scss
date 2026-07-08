@@ -1,0 +1,96 @@
+@use "../../styles/variables" as *;
+@use "../../styles/mixins" as *;
+
+.header {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: space-between;
+
+  :global(.section-title) {
+    margin-bottom: 0;
+  }
+}
+
+.controls {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.enemyForm {
+  display: flex;
+  gap: 0.4rem;
+
+  input {
+    width: 10rem;
+  }
+}
+
+.empty {
+  color: $color-muted;
+  font-style: italic;
+  margin-top: 0.75rem;
+}
+
+.link {
+  color: $color-gold-light;
+  text-decoration: underline;
+}
+
+.hint {
+  color: $color-muted;
+  font-size: 0.8rem;
+  margin: 0.6rem 0;
+}
+
+.scroll {
+  @include scrollbar-thin;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  max-height: 70vh;
+  overflow: auto;
+}
+
+.boardInner {
+  cursor: crosshair;
+  position: relative;
+}
+
+.canvas {
+  display: block;
+  left: 0;
+  position: absolute;
+  top: 0;
+}
+
+.token {
+  align-items: center;
+  border: 2px solid rgba(0, 0, 0, 0.55);
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  color: #fff;
+  display: flex;
+  font-family: $font-display;
+  font-size: 0.7rem;
+  font-weight: 700;
+  height: 32px;
+  justify-content: center;
+  pointer-events: none;
+  position: absolute;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  transition: left 0.18s ease, top 0.18s ease;
+  width: 32px;
+}
+
+.tokenMovable {
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.tokenSelected {
+  border-color: $color-gold;
+  box-shadow: 0 0 0 3px rgba($color-gold, 0.45), 0 2px 8px rgba(0, 0, 0, 0.6);
+  z-index: 2;
+}

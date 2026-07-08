@@ -1,0 +1,79 @@
+@use "../styles/variables" as *;
+
+.loading {
+  color: $color-muted;
+  font-style: italic;
+  margin-top: 4rem;
+  text-align: center;
+}
+
+.hero {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-top: 3rem;
+  text-align: center;
+}
+
+.title {
+  color: $color-gold;
+  font-size: clamp(2.5rem, 8vw, 4.5rem);
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-shadow: 0 0 30px rgba($color-gold, 0.3);
+  text-transform: uppercase;
+}
+
+.subtitle {
+  color: $color-cream;
+  font-size: 1.15rem;
+  max-width: 600px;
+}
+
+.googleBtn {
+  align-items: center;
+  background: $color-cream;
+  border: none;
+  border-radius: $radius-md;
+  color: #1f1f1f;
+  cursor: pointer;
+  display: flex;
+  font-family: $font-body;
+  font-size: 1rem;
+  font-weight: 600;
+  gap: 0.6rem;
+  padding: 0.7rem 1.6rem;
+  transition: transform $transition-fast, box-shadow $transition-fast;
+
+  &:hover {
+    box-shadow: 0 0 20px rgba($color-gold, 0.4);
+    transform: translateY(-2px);
+  }
+}
+
+.features {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  margin-top: 2rem;
+  max-width: 1100px;
+  text-align: left;
+  width: 100%;
+}
+
+.featureIcon {
+  font-size: 1.6rem;
+  margin-bottom: 0.4rem;
+}
+
+.featureTitle {
+  color: $color-gold-light;
+  font-size: 0.95rem;
+  margin-bottom: 0.3rem;
+}
+
+.featureText {
+  color: $color-muted;
+  font-size: 0.85rem;
+}

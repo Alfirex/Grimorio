@@ -1,0 +1,110 @@
+@use "../../styles/variables" as *;
+@use "../../styles/mixins" as *;
+
+.container {
+  bottom: 1.25rem;
+  position: fixed;
+  right: 1.25rem;
+  z-index: 50;
+}
+
+.fab {
+  @include panel;
+  border-radius: 50%;
+  cursor: pointer;
+  display: block;
+  font-size: 1.5rem;
+  height: 3.25rem;
+  margin-left: auto;
+  transition: transform $transition-fast, border-color $transition-fast;
+  width: 3.25rem;
+
+  &:hover {
+    border-color: $color-gold;
+    transform: scale(1.08);
+  }
+}
+
+.panel {
+  @include panel;
+  margin-bottom: 0.75rem;
+  padding: 1rem;
+  width: 300px;
+}
+
+.title {
+  @include ornament-title;
+  font-size: 0.8rem;
+  margin-bottom: 0.6rem;
+}
+
+.quickRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-bottom: 0.6rem;
+}
+
+.quickDie {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  color: $color-gold-light;
+  cursor: pointer;
+  font-family: $font-display;
+  font-size: 0.7rem;
+  padding: 0.25rem 0.45rem;
+  transition: border-color $transition-fast;
+
+  &:hover {
+    border-color: $color-gold;
+  }
+}
+
+.form {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.history {
+  @include scrollbar-thin;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.historyItem {
+  align-items: center;
+  border-bottom: 1px solid rgba($color-border, 0.5);
+  display: flex;
+  font-size: 0.8rem;
+  gap: 0.5rem;
+  padding: 0.3rem 0;
+}
+
+.historyExpr {
+  color: $color-muted;
+  min-width: 3.5rem;
+}
+
+.historyRolls {
+  color: $color-cream;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.historyTotal {
+  color: $color-gold;
+  font-family: $font-display;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.empty {
+  color: $color-muted;
+  font-size: 0.8rem;
+  font-style: italic;
+  padding: 0.3rem 0;
+}

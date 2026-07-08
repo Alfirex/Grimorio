@@ -1,0 +1,72 @@
+@use "../../styles/variables" as *;
+
+.navbar {
+  align-items: center;
+  background: rgba($color-ink, 0.9);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid $color-border;
+  display: flex;
+  gap: 2rem;
+  padding: 0.75rem 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.brand {
+  color: $color-gold;
+  font-family: $font-display;
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.brandIcon {
+  margin-right: 0.35rem;
+}
+
+.links {
+  display: flex;
+  flex: 1;
+  gap: 1.25rem;
+}
+
+.link,
+.linkActive {
+  color: $color-muted;
+  font-family: $font-display;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: color $transition-fast;
+
+  &:hover {
+    color: $color-gold-light;
+  }
+}
+
+.linkActive {
+  color: $color-gold;
+}
+
+.user {
+  align-items: center;
+  display: flex;
+  gap: 0.6rem;
+  margin-left: auto;
+}
+
+.avatar {
+  border: 1px solid $color-gold;
+  border-radius: 50%;
+}
+
+.userName {
+  color: $color-cream;
+  font-size: 0.85rem;
+
+  @media (max-width: 640px) {
+    display: none;
+  }
+}

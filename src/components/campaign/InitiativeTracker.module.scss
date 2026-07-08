@@ -1,0 +1,85 @@
+@use "../../styles/variables" as *;
+
+.topRow {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: space-between;
+  margin-bottom: 0.8rem;
+}
+
+.round {
+  color: $color-gold;
+  font-family: $font-display;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.topActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.addRow {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.8rem;
+}
+
+.numInput {
+  flex-shrink: 0;
+  text-align: center;
+  width: 4rem;
+}
+
+.empty {
+  color: $color-muted;
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.list {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.row {
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: $radius-sm;
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.3rem 0.4rem;
+  transition: border-color $transition-fast, background $transition-fast;
+}
+
+.active {
+  background: rgba($color-gold, 0.08);
+  border-color: $color-gold;
+}
+
+.turnMarker {
+  color: $color-gold;
+  min-width: 1rem;
+}
+
+.name {
+  color: $color-cream;
+  flex: 1;
+  font-size: 0.9rem;
+}
+
+.hpGroup {
+  align-items: center;
+  display: flex;
+  gap: 0.25rem;
+}
+
+.maxHp {
+  color: $color-muted;
+  font-size: 0.8rem;
+}

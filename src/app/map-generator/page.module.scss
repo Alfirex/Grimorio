@@ -1,0 +1,86 @@
+@use "../../styles/variables" as *;
+@use "../../styles/mixins" as *;
+
+.page {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.title {
+  color: $color-gold;
+  font-size: 1.6rem;
+}
+
+.layout {
+  align-items: start;
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: 1fr;
+
+  @media (min-width: 900px) {
+    grid-template-columns: 260px 1fr;
+  }
+}
+
+.controls {
+  display: grid;
+  gap: 0.9rem;
+  position: sticky;
+  top: 5rem;
+}
+
+.control {
+  display: grid;
+  gap: 0.2rem;
+
+  input[type="range"] {
+    accent-color: $color-gold;
+    width: 100%;
+  }
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.mapInfo {
+  color: $color-muted;
+  font-size: 0.8rem;
+}
+
+.sendBox {
+  border-top: 1px solid $color-border;
+  display: grid;
+  gap: 0.5rem;
+  padding-top: 0.9rem;
+}
+
+.sentOk {
+  color: $color-gold-light;
+  font-size: 0.8rem;
+}
+
+.sentLink {
+  color: $color-gold;
+  text-decoration: underline;
+}
+
+.sendWarning {
+  color: $color-muted;
+  font-size: 0.7rem;
+  font-style: italic;
+}
+
+.canvasWrap {
+  @include scrollbar-thin;
+  overflow: auto;
+  padding: 0.75rem;
+}
+
+.canvas {
+  display: block;
+  image-rendering: pixelated;
+  max-width: 100%;
+}

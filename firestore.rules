@@ -1,0 +1,71 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function campaignData(campaignId) {
+      return get(/databases/$(database)/documents/campaigns/$(campaignId)).data;
+    }
+
+    function isCampaignDM(campaignId) {
+      return campaignId != null && campaignData(campaignId).dmUid == request.auth.uid;
+    }
+
+    function isCampaignMember(campaignId) {
+      return campaignId != null && request.auth.uid in campaignData(campaignId).memberUids;
+    }
+
+    match /characters/{characterId} {
+      // Leer: el dueño, o cualquier miembro de la campaña del personaje
+      allow read: if signedIn() &&
+        (resource.data.ownerUid == request.auth.uid ||
+         isCampaignMember(resource.data.campaignId));
+
+      allow create: if signedIn() && request.resource.data.ownerUid == request.auth.uid;
+
+      // Escribir/borrar: solo el dueño
+      allow update, delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
+
+      match /notes/{noteId} {
+        function characterData() {
+          return get(/databases/$(database)/documents/characters/$(characterId)).data;
+        }
+
+        // El máster de la campaña gestiona las notas; el dueño del personaje
+        // solo puede leer las marcadas como compartidas.
+        allow read: if signedIn() &&
+          (isCampaignDM(characterData().campaignId) ||
+           (characterData().ownerUid == request.auth.uid &&
+            resource.data.visibility == 'shared'));
+
+        allow create, update, delete: if signedIn() &&
+          isCampaignDM(characterData().campaignId);
+      }
+    }
+
+    match /campaigns/{campaignId} {
+      // La búsqueda por código de invitación necesita lectura para usuarios autenticados
+      allow read: if signedIn();
+
+      allow create: if signedIn() &&
+        request.resource.data.dmUid == request.auth.uid &&
+        request.auth.uid in request.resource.data.memberUids;
+
+      // El DM puede editar todo; los miembros pueden mover fichas del tablero;
+      // otros usuarios solo pueden añadirse a memberUids (unirse por código)
+      allow update: if signedIn() &&
+        (resource.data.dmUid == request.auth.uid ||
+         (request.auth.uid in resource.data.memberUids &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['tokens'])) ||
+         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberUids']) &&
+          request.resource.data.memberUids.hasAll(resource.data.memberUids) &&
+          request.auth.uid in request.resource.data.memberUids));
+
+      allow delete: if signedIn() && resource.data.dmUid == request.auth.uid;
+    }
+  }
+}

@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #16120d;
+  --color-panel: #211a12;
+  --color-panel-light: #2a2118;
+  --color-border-brown: #4a3826;
+  --color-gold: #c9a227;
+  --color-gold-light: #e3c458;
+  --color-blood: #8b1e1e;
+  --color-blood-light: #b43a3a;
+  --color-parchment: #e8dcc0;
+  --color-cream: #e8e0d0;
+  --color-muted-brown: #a89878;
+  --font-display: var(--font-cinzel), serif;
+  --font-body: var(--font-alegreya), Georgia, serif;
+}

@@ -1,0 +1,158 @@
+@use "sass:color";
+@use "variables" as *;
+@use "mixins" as *;
+
+body {
+  background:
+    radial-gradient(ellipse at top, rgba($color-gold, 0.05), transparent 50%),
+    $color-ink;
+  color: $color-cream;
+  font-family: $font-body;
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: $font-display;
+}
+
+// ---------- Componentes compartidos ----------
+
+.panel {
+  @include panel;
+  padding: 1.25rem;
+}
+
+.panel--interactive {
+  @include panel-hover;
+  cursor: pointer;
+}
+
+.section-title {
+  @include ornament-title;
+  border-bottom: 1px solid $color-border;
+  font-size: 0.85rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.4rem;
+}
+
+.field-label {
+  color: $color-muted;
+  display: block;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+}
+
+.input,
+select.input,
+textarea.input {
+  @include input-base;
+}
+
+textarea.input {
+  @include scrollbar-thin;
+  resize: vertical;
+}
+
+.btn {
+  border: 1px solid $color-border-light;
+  border-radius: $radius-sm;
+  background: $color-panel-light;
+  color: $color-cream;
+  cursor: pointer;
+  font-family: $font-display;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  padding: 0.5rem 1.1rem;
+  text-transform: uppercase;
+  transition: all $transition-fast;
+
+  &:hover:not(:disabled) {
+    border-color: $color-gold;
+    color: $color-gold-light;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  &--gold {
+    background: linear-gradient(160deg, $color-gold 0%, color.adjust($color-gold, $lightness: -12%) 100%);
+    border-color: $color-gold;
+    color: $color-ink;
+    font-weight: 700;
+
+    &:hover:not(:disabled) {
+      background: $color-gold-light;
+      color: $color-ink;
+    }
+  }
+
+  &--danger {
+    border-color: $color-blood;
+    color: $color-blood-light;
+
+    &:hover:not(:disabled) {
+      background: $color-blood;
+      border-color: $color-blood;
+      color: $color-cream;
+    }
+  }
+
+  &--sm {
+    font-size: 0.7rem;
+    padding: 0.3rem 0.7rem;
+  }
+}
+
+.stat-box {
+  @include panel;
+  padding: 0.6rem 0.4rem;
+  text-align: center;
+
+  &__label {
+    color: $color-muted;
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  &__value {
+    color: $color-gold-light;
+    font-family: $font-display;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  &__sub {
+    color: $color-muted;
+    font-size: 0.75rem;
+  }
+}
+
+.badge {
+  background: rgba($color-gold, 0.15);
+  border: 1px solid rgba($color-gold, 0.4);
+  border-radius: 999px;
+  color: $color-gold-light;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  padding: 0.15rem 0.6rem;
+  text-transform: uppercase;
+
+  &--red {
+    background: rgba($color-blood, 0.2);
+    border-color: rgba($color-blood-light, 0.5);
+    color: $color-blood-light;
+  }
+}
+
+.error-text {
+  color: $color-blood-light;
+  font-size: 0.85rem;
+}

@@ -1,0 +1,59 @@
+@use "variables" as *;
+
+// Panel con borde ornamental dorado, base de todas las tarjetas
+@mixin panel {
+  background: linear-gradient(160deg, $color-panel 0%, $color-panel-light 100%);
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+@mixin panel-hover {
+  transition: border-color $transition-fast, transform $transition-fast;
+
+  &:hover {
+    border-color: $color-gold;
+    transform: translateY(-2px);
+  }
+}
+
+@mixin ornament-title {
+  font-family: $font-display;
+  color: $color-gold;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+@mixin input-base {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  color: $color-cream;
+  font-family: $font-body;
+  padding: 0.45rem 0.65rem;
+  transition: border-color $transition-fast;
+  width: 100%;
+
+  &:focus {
+    border-color: $color-gold;
+    outline: none;
+  }
+
+  &::placeholder {
+    color: rgba($color-muted, 0.6);
+  }
+}
+
+@mixin scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: $color-border transparent;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $color-border;
+    border-radius: 4px;
+  }
+}

@@ -1,0 +1,305 @@
+@use "../../styles/variables" as *;
+@use "../../styles/mixins" as *;
+
+.sheet {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.info {
+  color: $color-muted;
+  font-style: italic;
+  margin-top: 4rem;
+  text-align: center;
+}
+
+.toolbar {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.pageTitle {
+  color: $color-gold;
+  font-size: 1.6rem;
+}
+
+.toolbarActions {
+  align-items: center;
+  display: flex;
+  gap: 0.6rem;
+}
+
+.unsaved {
+  color: $color-gold-light;
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+.fieldset {
+  border: none;
+  display: grid;
+  gap: 1.25rem;
+  margin: 0;
+  min-width: 0;
+  padding: 0;
+}
+
+.identityGrid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.inspiration {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+
+  span {
+    margin-bottom: 0;
+  }
+}
+
+.abilityRow {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+}
+
+.abilityInput {
+  margin-top: 0.3rem;
+  text-align: center;
+}
+
+.columns {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: 1fr;
+
+  @media (min-width: 900px) {
+    grid-template-columns: 2fr 3fr;
+  }
+}
+
+.colLeft,
+.colRight {
+  display: grid;
+  gap: 1.25rem;
+  align-content: start;
+}
+
+.checkList {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.checkRow {
+  align-items: center;
+  border-radius: $radius-sm;
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.2rem 0.3rem;
+
+  &:hover {
+    background: rgba($color-gold, 0.05);
+  }
+}
+
+.checkLabel {
+  color: $color-cream;
+  flex: 1;
+  font-size: 0.9rem;
+}
+
+.abilityTag {
+  color: $color-muted;
+  font-size: 0.65rem;
+  font-style: normal;
+  margin-left: 0.4rem;
+}
+
+.checkBonus {
+  color: $color-gold-light;
+  font-family: $font-display;
+  font-weight: 700;
+  min-width: 2rem;
+  text-align: right;
+}
+
+.expertiseBtn {
+  background: none;
+  border: none;
+  color: rgba($color-muted, 0.35);
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0;
+  transition: color $transition-fast;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+  }
+}
+
+.expertiseOn {
+  color: $color-gold;
+}
+
+.hint {
+  color: $color-muted;
+  font-size: 0.7rem;
+  margin-bottom: 0.5rem;
+}
+
+.passive {
+  border-top: 1px solid $color-border;
+  color: $color-cream;
+  font-size: 0.85rem;
+  margin-top: 0.6rem;
+  padding-top: 0.6rem;
+
+  strong {
+    color: $color-gold-light;
+  }
+}
+
+.combatGrid {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.hitDiceRow {
+  align-items: center;
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.8rem;
+
+  span:first-child {
+    flex: 1;
+    margin-bottom: 0;
+  }
+}
+
+.hitDiceSep {
+  color: $color-muted;
+}
+
+.smallInput {
+  text-align: center;
+  width: 4.2rem;
+}
+
+.deathSaves {
+  border-top: 1px solid $color-border;
+  margin-top: 0.8rem;
+  padding-top: 0.6rem;
+}
+
+.deathRow {
+  align-items: center;
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.25rem;
+
+  span {
+    margin-bottom: 0;
+    min-width: 4rem;
+  }
+}
+
+.attackRow {
+  display: grid;
+  gap: 0.4rem;
+  grid-template-columns: 2fr 0.8fr 1.2fr 1.2fr auto;
+  margin-bottom: 0.4rem;
+}
+
+.moneyRow {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(5, 1fr);
+  margin-bottom: 0.75rem;
+}
+
+.coin input {
+  text-align: center;
+}
+
+.spellHeader {
+  align-items: end;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: 2fr 1fr 1fr;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.subTitle {
+  @include ornament-title;
+  font-size: 0.75rem;
+  margin: 1rem 0 0.5rem;
+}
+
+.slotsRow {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+}
+
+.slotBox {
+  @include panel;
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.slotInputs {
+  align-items: center;
+  color: $color-muted;
+  display: flex;
+  gap: 0.25rem;
+
+  input {
+    text-align: center;
+  }
+}
+
+.spellLevelGroup {
+  margin-bottom: 0.75rem;
+}
+
+.spellLevelTitle {
+  color: $color-gold-light;
+  font-size: 0.8rem;
+  margin-bottom: 0.3rem;
+}
+
+.spellRow {
+  align-items: center;
+  display: grid;
+  gap: 0.4rem;
+  grid-template-columns: auto 1.5fr 2fr auto;
+  margin-bottom: 0.3rem;
+}
+
+.addSpellRow {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+
+  select {
+    width: auto;
+  }
+}
+
+.personalityGrid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  margin-bottom: 0.75rem;
+}

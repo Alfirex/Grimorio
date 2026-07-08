@@ -1,0 +1,86 @@
+@use "../../styles/variables" as *;
+
+.grid {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: 1fr;
+
+  @media (min-width: 900px) {
+    grid-template-columns: 3fr 2fr;
+  }
+}
+
+.sectionHeader {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.heading {
+  color: $color-gold;
+  font-size: 1.2rem;
+  letter-spacing: 0.08em;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+}
+
+.sectionHeader .heading {
+  margin-bottom: 0;
+}
+
+.empty {
+  color: $color-muted;
+  font-style: italic;
+}
+
+.cards {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.charCard,
+.campCard {
+  display: block;
+}
+
+.charName {
+  color: $color-cream;
+  font-family: $font-display;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.charMeta {
+  color: $color-muted;
+  font-size: 0.85rem;
+  margin-top: 0.15rem;
+}
+
+.charHp {
+  color: $color-gold-light;
+  font-size: 0.8rem;
+  margin-top: 0.4rem;
+}
+
+.campHeader {
+  align-items: center;
+  display: flex;
+  gap: 0.6rem;
+  justify-content: space-between;
+}
+
+.forms {
+  display: grid;
+  gap: 0.6rem;
+  margin-bottom: 1.2rem;
+}
+
+.formRow {
+  display: flex;
+  gap: 0.5rem;
+
+  button {
+    flex-shrink: 0;
+  }
+}

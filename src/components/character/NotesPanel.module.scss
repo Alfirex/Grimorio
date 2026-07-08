@@ -1,0 +1,65 @@
+@use "../../styles/variables" as *;
+
+.form {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.formActions {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.visibility {
+  align-items: center;
+  color: $color-cream;
+  display: flex;
+  font-size: 0.85rem;
+  gap: 0.4rem;
+}
+
+.empty {
+  color: $color-muted;
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.list {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.note {
+  background: rgba(0, 0, 0, 0.25);
+  border-left: 3px solid $color-gold;
+  border-radius: $radius-sm;
+  padding: 0.6rem 0.8rem;
+}
+
+.noteHeader {
+  align-items: center;
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 0.3rem;
+}
+
+.noteAuthor {
+  color: $color-gold-light;
+  font-family: $font-display;
+  font-size: 0.8rem;
+}
+
+.noteDate {
+  color: $color-muted;
+  flex: 1;
+  font-size: 0.75rem;
+  text-align: right;
+}
+
+.noteText {
+  color: $color-cream;
+  font-size: 0.9rem;
+  white-space: pre-wrap;
+}
