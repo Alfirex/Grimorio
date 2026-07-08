@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { generateDungeon, type DungeonMap } from "@/utils/mapgen";
@@ -15,7 +16,7 @@ import {
   updateCharacter,
   upsertBoardToken,
 } from "@/lib/db";
-import { BESTIARY } from "@/data/bestiary";
+import { BESTIARY, type MonsterDef } from "@/data/bestiary";
 import type { BoardToken, Campaign, Character } from "@/types";
 import styles from "./BoardView.module.scss";
 
@@ -359,6 +360,7 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
       attacks: monster.attacks,
       abilities: monster.abilities,
       loot: monster.loot,
+      image: monster.image,
     });
   };
 
@@ -522,6 +524,13 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
         )}
       </div>
 
+      {isDM && board && map && creature !== "custom" && BESTIARY[parseInt(creature, 10)] && (
+        <MonsterCard
+          key={creature}
+          monster={BESTIARY[parseInt(creature, 10)]}
+        />
+      )}
+
       {!board || !map ? (
         <p className={styles.empty}>
           {isDM ? (
@@ -612,10 +621,16 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
                       dead ? styles.tokenDead : "",
                       hidden ? styles.tokenHidden : "",
                     ].join(" ")}
-                    style={{ left: token.x * CELL, top: token.y * CELL, background: token.color }}
+                    style={{
+                      left: token.x * CELL,
+                      top: token.y * CELL,
+                      background: token.image
+                        ? `${token.color} url(${token.image}) center / cover`
+                        : token.color,
+                    }}
                     title={`${token.name}${stats.maxHp > 0 ? ` · ${stats.hp}/${stats.maxHp} PG · CA ${stats.ac} · ${stats.speed} pies` : ""}${hidden ? " · 🕶 oculto para los jugadores" : ""}`}
                   >
-                    {dead ? "✕" : initials(token.name)}
+                    {dead ? "✕" : token.image ? "" : initials(token.name)}
                     {stats.maxHp > 0 && !dead && (
                       <span
                         className={styles.hpBar}
@@ -714,7 +729,16 @@ function AttackPanel({
   return (
     <div className={styles.attackPanel}>
       <div className={styles.attackHeader}>
-        <span>
+        <span className={styles.attackTitle}>
+          {attacker.image && (
+            <Image
+              src={attacker.image}
+              alt={attacker.name}
+              width={40}
+              height={40}
+              className={styles.attackPortrait}
+            />
+          )}
           ⚔ <strong>{attacker.name}</strong> ataca a <strong>{target.name}</strong>
           <em className={styles.attackMeta}>
             {" "}
@@ -786,6 +810,44 @@ function AttackPanel({
           </button>
         </form>
       )}
+    </div>
+  );
+}
+
+/** Tarjeta de vista previa de la criatura seleccionada en el bestiario. */
+function MonsterCard({ monster }: { monster: MonsterDef }) {
+  const [imgError, setImgError] = useState(false);
+
+  return (
+    <div className={styles.monsterCard}>
+      {!imgError ? (
+        <Image
+          src={monster.image}
+          alt={monster.name}
+          width={110}
+          height={110}
+          className={styles.monsterImg}
+          onError={() => setImgError(true)}
+        />
+      ) : (
+        <span className={styles.monsterEmoji}>{monster.emoji}</span>
+      )}
+      <div className={styles.monsterInfo}>
+        <h3 className={styles.monsterName}>{monster.name}</h3>
+        <p className={styles.monsterStats}>
+          ❤ {monster.hp} PG · 🛡 CA {monster.ac} · 👣 {monster.speed} pies · 💰 {monster.loot === "0" ? "sin botín" : `${monster.loot} mo`}
+        </p>
+        <ul className={styles.monsterList}>
+          {monster.attacks.map((attack) => (
+            <li key={attack.id}>
+              ⚔ {attack.name} {attack.bonus} ({attack.damage} {attack.type})
+            </li>
+          ))}
+          {monster.abilities.map((ability) => (
+            <li key={ability}>✧ {ability}</li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }

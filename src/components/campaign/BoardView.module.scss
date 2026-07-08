@@ -136,6 +136,73 @@
   gap: 0.15rem;
 }
 
+.attackTitle {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.attackPortrait {
+  border: 1px solid $color-border-light;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.monsterCard {
+  align-items: flex-start;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  display: flex;
+  gap: 1rem;
+  margin: 0.75rem 0;
+  padding: 0.8rem 1rem;
+}
+
+.monsterImg {
+  background: $color-ink;
+  border: 2px solid $color-border-light;
+  border-radius: $radius-md;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.monsterEmoji {
+  align-items: center;
+  background: $color-ink;
+  border: 2px solid $color-border-light;
+  border-radius: $radius-md;
+  display: flex;
+  flex-shrink: 0;
+  font-size: 3rem;
+  height: 110px;
+  justify-content: center;
+  width: 110px;
+}
+
+.monsterInfo {
+  min-width: 0;
+}
+
+.monsterName {
+  color: $color-gold-light;
+  font-size: 1rem;
+}
+
+.monsterStats {
+  color: $color-cream;
+  font-size: 0.82rem;
+  margin: 0.2rem 0 0.4rem;
+}
+
+.monsterList {
+  color: $color-muted;
+  display: grid;
+  font-size: 0.78rem;
+  gap: 0.15rem;
+}
+
 .freeMove {
   align-items: center;
   color: $color-muted;

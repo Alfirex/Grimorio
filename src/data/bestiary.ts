@@ -12,7 +12,12 @@ export interface MonsterDef {
   attacks: Attack[];
   abilities: string[]; // hechizos, trucos y rasgos, como referencia para el máster
   loot: string;
+  image: string; // ilustración del SRD (dnd5eapi.co)
+  emoji: string; // respaldo si la imagen no carga
 }
+
+const img = (slug: string) =>
+  `https://www.dnd5eapi.co/api/images/monsters/${slug}.png`;
 
 const atk = (id: string, name: string, bonus: string, damage: string, type: string): Attack => ({
   id,
@@ -34,6 +39,8 @@ export const BESTIARY: MonsterDef[] = [
     ],
     abilities: ["Tácticas de manada: ventaja si un aliado está a 5 pies del objetivo", "Sensibilidad a la luz solar"],
     loot: "1d4",
+    image: img("kobold"),
+    emoji: "🦎",
   },
   {
     name: "Goblin",
@@ -46,6 +53,8 @@ export const BESTIARY: MonsterDef[] = [
     ],
     abilities: ["Escapada ágil: puede Retirarse o Esconderse como acción adicional"],
     loot: "1d6",
+    image: img("goblin"),
+    emoji: "👺",
   },
   {
     name: "Bandido",
@@ -58,6 +67,8 @@ export const BESTIARY: MonsterDef[] = [
     ],
     abilities: [],
     loot: "2d6",
+    image: img("bandit"),
+    emoji: "🗡️",
   },
   {
     name: "Cultista",
@@ -67,6 +78,8 @@ export const BESTIARY: MonsterDef[] = [
     attacks: [atk("c1", "Cimitarra", "+3", "1d6+1", "Cortante")],
     abilities: ["Devoción oscura: ventaja contra ser hechizado o asustado"],
     loot: "1d6",
+    image: img("cultist"),
+    emoji: "🕯️",
   },
   {
     name: "Esqueleto",
@@ -79,6 +92,8 @@ export const BESTIARY: MonsterDef[] = [
     ],
     abilities: ["Vulnerable a daño contundente", "Inmune a veneno"],
     loot: "1d4",
+    image: img("skeleton"),
+    emoji: "💀",
   },
   {
     name: "Zombi",
@@ -88,6 +103,8 @@ export const BESTIARY: MonsterDef[] = [
     attacks: [atk("z1", "Golpe", "+3", "1d6+1", "Contundente")],
     abilities: ["Fortaleza no muerta: al llegar a 0 PG, con CON CD 5+daño se queda a 1 PG (salvo radiante o crítico)"],
     loot: "1d4",
+    image: img("zombie"),
+    emoji: "🧟",
   },
   {
     name: "Lobo",
@@ -97,6 +114,8 @@ export const BESTIARY: MonsterDef[] = [
     attacks: [atk("l1", "Mordisco", "+4", "2d4+2", "Perforante")],
     abilities: ["Si impacta, el objetivo hace salvación de FUE CD 11 o cae derribado", "Tácticas de manada"],
     loot: "0",
+    image: img("wolf"),
+    emoji: "🐺",
   },
   {
     name: "Aprendiz de mago",
@@ -115,6 +134,8 @@ export const BESTIARY: MonsterDef[] = [
       "Nv1: Armadura de mago — CA 15 si la lanza antes del combate",
     ],
     loot: "2d6",
+    image: img("mage"),
+    emoji: "🧙",
   },
   {
     name: "Chamán goblin",
@@ -131,6 +152,8 @@ export const BESTIARY: MonsterDef[] = [
       "Nv1: Curar heridas — 1d8+3 PG a un aliado (2 usos)",
     ],
     loot: "2d6",
+    image: img("goblin"),
+    emoji: "🔮",
   },
   {
     name: "Osgo",
@@ -143,6 +166,8 @@ export const BESTIARY: MonsterDef[] = [
     ],
     abilities: ["Ataque sorpresa: +2d6 de daño si el objetivo está sorprendido", "Sigiloso"],
     loot: "2d6",
+    image: img("bugbear"),
+    emoji: "👹",
   },
   {
     name: "Araña gigante",
@@ -152,6 +177,8 @@ export const BESTIARY: MonsterDef[] = [
     attacks: [atk("a1", "Mordisco venenoso", "+5", "1d8+3", "Perforante + veneno (2d8, CON CD 11 mitad)")],
     abilities: ["Telaraña (recarga 5-6): apresa al objetivo, FUE CD 12 para liberarse", "Trepar por muros y techos"],
     loot: "0",
+    image: img("giant-spider"),
+    emoji: "🕷️",
   },
   {
     name: "Espectro",
@@ -161,6 +188,8 @@ export const BESTIARY: MonsterDef[] = [
     attacks: [atk("sp1", "Drenar vida", "+4", "3d6", "Necrótico (CON CD 10 o el máximo de PG baja lo mismo)")],
     abilities: ["Incorpóreo: atraviesa criaturas y objetos", "Sensible a la luz solar", "Resistente a daño no mágico"],
     loot: "0",
+    image: img("specter"),
+    emoji: "👻",
   },
   {
     name: "Ogro",
@@ -173,6 +202,8 @@ export const BESTIARY: MonsterDef[] = [
     ],
     abilities: [],
     loot: "3d6",
+    image: img("ogre"),
+    emoji: "🧌",
   },
   {
     name: "Jefe hobgoblin",
@@ -185,5 +216,7 @@ export const BESTIARY: MonsterDef[] = [
     ],
     abilities: ["Ventaja marcial: +2d6 de daño una vez por turno si un aliado está a 5 pies del objetivo", "Liderazgo"],
     loot: "4d6",
+    image: img("hobgoblin"),
+    emoji: "⚔️",
   },
 ];
