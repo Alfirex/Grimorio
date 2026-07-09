@@ -74,6 +74,7 @@ export function createBlankCharacter(ownerUid: string, ownerName: string): Omit<
     level: 1,
     background: "Soldado",
     alignment: "Neutral",
+    deity: "",
     xp: 0,
     abilities: { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
     savingThrowProfs: [],

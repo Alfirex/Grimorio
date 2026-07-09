@@ -15,6 +15,8 @@ export interface Attack {
   bonus: string;
   damage: string;
   type: string;
+  /** Alcance en pies; ausente = cuerpo a cuerpo (5 pies). */
+  range?: number;
 }
 
 export interface Spell {
@@ -60,6 +62,8 @@ export interface Character {
   level: number;
   background: string;
   alignment: string;
+  /** Deidad o fe que sigue el personaje ("" = ninguna). */
+  deity?: string;
   xp: number;
 
   // Características
@@ -140,6 +144,7 @@ export interface BoardToken {
   abilities?: string[]; // hechizos, trucos y rasgos (referencia del máster)
   loot?: string; // expresión de dados de monedas de oro que suelta al morir
   image?: string; // retrato de la criatura (bestiario)
+  conditions?: string[]; // estados activos: Envenenado, Derribado…
 }
 
 export interface BoardLogEntry {
@@ -162,15 +167,23 @@ export interface Campaign {
   boardLog?: BoardLogEntry[];
   /** Índices de salas ya descubiertas por los jugadores (niebla de guerra). */
   revealedRooms?: number[];
+  /** Encuentro en curso: orden de iniciativa visible para todos. */
+  encounter?: Encounter | null;
 }
 
 export interface Combatant {
+  /** Id de la ficha del tablero (o del personaje, que coincide con su ficha). */
   id: string;
   name: string;
   initiative: number;
-  hp: number;
-  maxHp: number;
   isPlayer: boolean;
+}
+
+/** Encuentro compartido: lo gestiona el máster, lo ven todos los jugadores. */
+export interface Encounter {
+  combatants: Combatant[];
+  turnIndex: number;
+  round: number;
 }
 
 export interface DiceRollResult {
