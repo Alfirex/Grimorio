@@ -143,6 +143,7 @@ export interface BoardToken {
   attacks?: Attack[]; // ataques del bestiario (enemigos)
   abilities?: string[]; // hechizos, trucos y rasgos (referencia del máster)
   loot?: string; // expresión de dados de monedas de oro que suelta al morir
+  xp?: number; // PX que otorga al morir (se reparten al saquear)
   image?: string; // retrato de la criatura (bestiario)
   conditions?: string[]; // estados activos: Envenenado, Derribado…
 }

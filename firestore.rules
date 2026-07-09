@@ -27,10 +27,16 @@ service cloud.firestore {
 
       allow create: if signedIn() && request.resource.data.ownerUid == request.auth.uid;
 
-      // Editar: el dueño, o el máster de su campaña (daño en combate, ajustes de mesa)
+      // Editar: el dueño, o el máster de su campaña (daño en combate, ajustes
+      // de mesa). Los compañeros de campaña solo pueden sumar PX (reparto de
+      // experiencia al saquear una sala).
       allow update: if signedIn() &&
         (resource.data.ownerUid == request.auth.uid ||
-         isCampaignDM(resource.data.campaignId));
+         isCampaignDM(resource.data.campaignId) ||
+         (isCampaignMember(resource.data.campaignId) &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['xp', 'updatedAt']) &&
+          request.resource.data.xp >= resource.data.xp));
 
       // Borrar: solo el dueño
       allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
