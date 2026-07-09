@@ -9,15 +9,21 @@ import { renderDungeon } from "@/utils/renderDungeon";
 import { rollDice } from "@/utils/dice";
 import {
   appendBoardLog,
+  clearBoardLog,
   moveBoardToken,
+  removeBoardLogEntry,
   removeBoardToken,
   revealBoardRoom,
+  setBoardTokenConditions,
   setBoardTokenHp,
   updateCharacter,
   upsertBoardToken,
 } from "@/lib/db";
 import { BESTIARY, type MonsterDef } from "@/data/bestiary";
-import type { BoardToken, Campaign, Character } from "@/types";
+import { CONDITIONS, conditionEmoji, inferAttackRange } from "@/data/dnd5e";
+import { spellRangeFor } from "@/data/srd";
+import { sortedCombatants } from "./InitiativeTracker";
+import type { Attack, BoardToken, Campaign, Character } from "@/types";
 import styles from "./BoardView.module.scss";
 
 const CELL = 32;
@@ -57,6 +63,7 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
   const [notice, setNotice] = useState("");
   const [freeMove, setFreeMove] = useState(false);
   const [creature, setCreature] = useState("0"); // índice del bestiario o "custom"
+  const [hpDelta, setHpDelta] = useState("5");
   const [enemyName, setEnemyName] = useState("");
   const [enemyHp, setEnemyHp] = useState("7");
   const [enemyAc, setEnemyAc] = useState("13");
@@ -116,6 +123,12 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
     (a.characterId === null) !== (b.characterId === null);
 
   const selectedToken = selectedId ? (tokens[selectedId] ?? null) : null;
+
+  // Ficha a la que le toca actuar en el encuentro compartido
+  const encounter = campaign.encounter ?? null;
+  const activeTokenId = encounter
+    ? (sortedCombatants(encounter)[encounter.turnIndex]?.id ?? null)
+    : null;
 
   /** Casillas alcanzables por la ficha seleccionada (BFS limitado por su velocidad). */
   const reachable = useMemo<Set<string> | null>(() => {
@@ -417,6 +430,33 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
     setCombat(null);
   };
 
+  /** Daño o cura manual del máster sobre la ficha seleccionada. */
+  const applyHpDelta = async (sign: 1 | -1) => {
+    if (!selectedToken) return;
+    const amount = Math.max(0, parseInt(hpDelta, 10) || 0);
+    if (!amount) return;
+    const stats = statsOf(selectedToken);
+    const cap = stats.maxHp > 0 ? stats.maxHp : Number.MAX_SAFE_INTEGER;
+    const next =
+      sign > 0 ? Math.min(cap, stats.hp + amount) : Math.max(0, stats.hp - amount);
+    const character = characterOf(selectedToken);
+    if (character) await updateCharacter(character.id, { currentHp: next });
+    else await setBoardTokenHp(campaign.id, selectedToken.id, next);
+    await appendLog(
+      sign > 0
+        ? `✚ ${selectedToken.name} recupera ${amount} PG (${next}${stats.maxHp > 0 ? `/${stats.maxHp}` : ""}).`
+        : `💥 ${selectedToken.name} recibe ${amount} de daño (queda a ${next} PG).`
+    );
+  };
+
+  const toggleCondition = (token: BoardToken, label: string) => {
+    const current = token.conditions ?? [];
+    const next = current.includes(label)
+      ? current.filter((c) => c !== label)
+      : [...current, label];
+    setBoardTokenConditions(campaign.id, token.id, next);
+  };
+
   const attacker = combat ? (tokens[combat.attackerId] ?? null) : null;
   const target = combat ? (tokens[combat.targetId] ?? null) : null;
 
@@ -554,6 +594,44 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
           </p>
           {notice && <p className={styles.notice}>{notice}</p>}
 
+          {selectedToken && (isDM || canMove(selectedToken)) && (
+            <div className={styles.tokenTools}>
+              <div className={styles.conditionRow}>
+                {CONDITIONS.map((cond) => {
+                  const active = (selectedToken.conditions ?? []).includes(cond.label);
+                  return (
+                    <button
+                      key={cond.label}
+                      type="button"
+                      className={`${styles.conditionChip} ${active ? styles.conditionOn : ""}`}
+                      onClick={() => toggleCondition(selectedToken, cond.label)}
+                    >
+                      {cond.emoji} {cond.label}
+                    </button>
+                  );
+                })}
+              </div>
+              {isDM && (
+                <div className={styles.hpAdjust}>
+                  <input
+                    className={`input ${styles.statInput}`}
+                    type="number"
+                    min={1}
+                    title="Cantidad de PG"
+                    value={hpDelta}
+                    onChange={(e) => setHpDelta(e.target.value)}
+                  />
+                  <button type="button" className="btn btn--sm" onClick={() => applyHpDelta(-1)}>
+                    💥 Daño
+                  </button>
+                  <button type="button" className="btn btn--sm" onClick={() => applyHpDelta(1)}>
+                    ✚ Curar
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
           {lootableRooms.length > 0 && (
             <div className={styles.lootRow}>
               {lootableRooms.map(({ room, bodies }) => (
@@ -576,6 +654,7 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
               target={target}
               attackerCharacter={characterOf(attacker)}
               targetStats={statsOf(target)}
+              onLog={appendLog}
               onResolve={async (text, damage) => {
                 if (damage > 0) {
                   const targetCharacter = characterOf(target);
@@ -613,12 +692,14 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
                 const hidden = isDM && hiddenFromPlayers(token);
                 // Retrato: avatar del personaje (jugadores) o ilustración del bestiario
                 const portrait = characterOf(token)?.avatar || token.image;
+                const conditions = token.conditions ?? [];
                 return (
                   <div
                     key={token.id}
                     className={[
                       styles.token,
                       selectedId === token.id ? styles.tokenSelected : "",
+                      activeTokenId === token.id && !dead ? styles.tokenActive : "",
                       canMove(token) ? styles.tokenMovable : "",
                       dead ? styles.tokenDead : "",
                       hidden ? styles.tokenHidden : "",
@@ -630,7 +711,7 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
                         ? `${token.color} url(${portrait}) center / cover`
                         : token.color,
                     }}
-                    title={`${token.name}${stats.maxHp > 0 ? ` · ${stats.hp}/${stats.maxHp} PG · CA ${stats.ac} · ${stats.speed} pies` : ""}${hidden ? " · 🕶 oculto para los jugadores" : ""}`}
+                    title={`${token.name}${stats.maxHp > 0 ? ` · ${stats.hp}/${stats.maxHp} PG · CA ${stats.ac} · ${stats.speed} pies` : ""}${conditions.length > 0 ? ` · ${conditions.join(", ")}` : ""}${hidden ? " · 🕶 oculto para los jugadores" : ""}`}
                   >
                     {dead ? "✕" : portrait ? "" : initials(token.name)}
                     {stats.maxHp > 0 && !dead && (
@@ -638,6 +719,11 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
                         className={styles.hpBar}
                         style={{ width: `${Math.max(0, Math.min(100, (stats.hp / stats.maxHp) * 100))}%` }}
                       />
+                    )}
+                    {conditions.length > 0 && !dead && (
+                      <span className={styles.tokenConditions}>
+                        {conditions.slice(0, 3).map(conditionEmoji).join("")}
+                      </span>
                     )}
                   </div>
                 );
@@ -647,11 +733,38 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
 
           {log.length > 0 && (
             <div className={styles.log}>
-              <h3 className={styles.logTitle}>Registro de combate</h3>
-              <ul>
+              <div className={styles.logHeader}>
+                <h3 className={styles.logTitle}>Registro de combate</h3>
+                {isDM && (
+                  <button
+                    type="button"
+                    className="btn btn--danger btn--sm"
+                    onClick={() => clearBoardLog(campaign.id)}
+                  >
+                    🗑 Vaciar registro
+                  </button>
+                )}
+              </div>
+              <ul className={styles.logList}>
                 {log.map((entry) => (
                   <li key={entry.id} className={styles.logEntry}>
-                    {entry.text}
+                    <span className={styles.logTime}>
+                      {new Date(entry.timestamp).toLocaleTimeString("es-ES", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                    <span className={styles.logText}>{entry.text}</span>
+                    {isDM && (
+                      <button
+                        type="button"
+                        className={styles.logDelete}
+                        title="Eliminar esta entrada"
+                        onClick={() => removeBoardLogEntry(campaign.id, log, entry.id)}
+                      >
+                        ✕
+                      </button>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -671,6 +784,8 @@ interface AttackPanelProps {
   attackerCharacter: Character | undefined;
   targetStats: { hp: number; maxHp: number; ac: number };
   onResolve: (logText: string, damage: number) => Promise<void>;
+  /** Anota en el registro sin cerrar el panel (tiradas de habilidades). */
+  onLog: (text: string) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -680,18 +795,44 @@ function AttackPanel({
   attackerCharacter,
   targetStats,
   onResolve,
+  onLog,
   onCancel,
 }: AttackPanelProps) {
   const [customBonus, setCustomBonus] = useState("4");
   const [customDamage, setCustomDamage] = useState("1d6+2");
+  const [customRange, setCustomRange] = useState(String(FEET_PER_CELL));
   const [busy, setBusy] = useState(false);
 
   const distance = Math.max(Math.abs(attacker.x - target.x), Math.abs(attacker.y - target.y));
+  const distanceFeet = distance * FEET_PER_CELL;
+  // Alcance declarado > alcance real del conjuro homónimo > deducción por
+  // nombre de arma (arcos, ballestas…) > cuerpo a cuerpo
+  const rangeOf = (attack: Attack): number =>
+    attack.range ??
+    spellRangeFor(attack.name) ??
+    inferAttackRange(attack.name) ??
+    FEET_PER_CELL;
+  const inRange = (attack: Attack): boolean => distanceFeet <= rangeOf(attack);
   // Los personajes atacan con su hoja; los monstruos del bestiario, con los suyos
   const attacks = (attackerCharacter?.attacks ?? attacker.attacks ?? []).filter((a) =>
     a.name.trim()
   );
   const abilities = attackerCharacter ? [] : (attacker.abilities ?? []);
+
+  /** Tira los dados que mencione la habilidad y lo anota, sin cerrar el panel. */
+  const rollAbility = async (ability: string, expr: string) => {
+    setBusy(true);
+    try {
+      const rolled = rollDice(expr);
+      if (!rolled) return;
+      const name = ability.split(/[:—]/)[0].trim();
+      await onLog(
+        `✧ ${attacker.name} usa ${name}: 🎲 ${expr} = ${rolled.total} [${rolled.rolls.join(", ")}]`
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const executeAttack = async (name: string, bonusText: string, damageExpr: string) => {
     setBusy(true);
@@ -745,7 +886,7 @@ function AttackPanel({
           <em className={styles.attackMeta}>
             {" "}
             · CA {targetStats.ac} · {targetStats.hp}/{targetStats.maxHp} PG · a {distance} casilla
-            {distance !== 1 && "s"}
+            {distance !== 1 && "s"} ({distanceFeet} pies)
           </em>
         </span>
         <button type="button" className="btn btn--sm" onClick={onCancel}>
@@ -755,32 +896,60 @@ function AttackPanel({
 
       {abilities.length > 0 && (
         <ul className={styles.abilityList}>
-          {abilities.map((ability) => (
-            <li key={ability}>✧ {ability}</li>
-          ))}
+          {abilities.map((ability) => {
+            // Si la habilidad menciona dados (p. ej. "Curar heridas — 1d8+3"), se puede tirar
+            const dice = ability.match(/\d{0,3}d\d{1,4}(?:\s*[+-]\s*\d{1,4})?/i)?.[0];
+            return (
+              <li key={ability} className={styles.abilityRow}>
+                <span>✧ {ability}</span>
+                {dice && (
+                  <button
+                    type="button"
+                    className="btn btn--sm"
+                    disabled={busy}
+                    title="Tirar los dados de la habilidad y anotarlo en el registro"
+                    onClick={() => rollAbility(ability, dice)}
+                  >
+                    🎲 {dice}
+                  </button>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
 
       {attacks.length > 0 ? (
         <ul className={styles.attackList}>
-          {attacks.map((attack) => (
-            <li key={attack.id} className={styles.attackRow}>
-              <span className={styles.attackName}>{attack.name}</span>
-              <span className={styles.attackMeta}>
-                {attack.bonus || "+0"} · {attack.damage || "1"} {attack.type}
-              </span>
-              <button
-                type="button"
-                className="btn btn--gold btn--sm"
-                disabled={busy}
-                onClick={() =>
-                  executeAttack(attack.name, attack.bonus, attack.damage || "1")
-                }
-              >
-                🎲 Tirar
-              </button>
-            </li>
-          ))}
+          {attacks.map((attack) => {
+            const reachesTarget = inRange(attack);
+            return (
+              <li key={attack.id} className={styles.attackRow}>
+                <span className={styles.attackName}>{attack.name}</span>
+                <span className={styles.attackMeta}>
+                  {attack.bonus || "+0"} · {attack.damage || "1"} {attack.type} ·{" "}
+                  {rangeOf(attack) > FEET_PER_CELL
+                    ? `alcance ${rangeOf(attack)} pies`
+                    : "cuerpo a cuerpo"}
+                </span>
+                <button
+                  type="button"
+                  className="btn btn--gold btn--sm"
+                  disabled={busy || !reachesTarget}
+                  title={
+                    reachesTarget
+                      ? undefined
+                      : `Fuera de alcance: el objetivo está a ${distanceFeet} pies y este ataque llega a ${rangeOf(attack)}.`
+                  }
+                  onClick={() =>
+                    executeAttack(attack.name, attack.bonus, attack.damage || "1")
+                  }
+                >
+                  {reachesTarget ? "🎲 Tirar" : "✕ Sin alcance"}
+                </button>
+              </li>
+            );
+          })}
         </ul>
       ) : (
         <form
@@ -807,8 +976,32 @@ function AttackPanel({
               placeholder="1d6+2"
             />
           </label>
-          <button type="submit" className="btn btn--gold btn--sm" disabled={busy}>
-            🎲 Tirar
+          <label>
+            <span className="field-label">Alcance (pies)</span>
+            <input
+              className={`input ${styles.statInput}`}
+              type="number"
+              min={FEET_PER_CELL}
+              step={FEET_PER_CELL}
+              value={customRange}
+              onChange={(e) => setCustomRange(e.target.value)}
+            />
+          </label>
+          <button
+            type="submit"
+            className="btn btn--gold btn--sm"
+            disabled={
+              busy || distanceFeet > (parseInt(customRange, 10) || FEET_PER_CELL)
+            }
+            title={
+              distanceFeet > (parseInt(customRange, 10) || FEET_PER_CELL)
+                ? `Fuera de alcance: el objetivo está a ${distanceFeet} pies.`
+                : undefined
+            }
+          >
+            {distanceFeet > (parseInt(customRange, 10) || FEET_PER_CELL)
+              ? "✕ Sin alcance"
+              : "🎲 Tirar"}
           </button>
         </form>
       )}
@@ -842,7 +1035,8 @@ function MonsterCard({ monster }: { monster: MonsterDef }) {
         <ul className={styles.monsterList}>
           {monster.attacks.map((attack) => (
             <li key={attack.id}>
-              ⚔ {attack.name} {attack.bonus} ({attack.damage} {attack.type})
+              ⚔ {attack.name} {attack.bonus} ({attack.damage} {attack.type}
+              {attack.range ? ` · ${attack.range} pies` : ""})
             </li>
           ))}
           {monster.abilities.map((ability) => (

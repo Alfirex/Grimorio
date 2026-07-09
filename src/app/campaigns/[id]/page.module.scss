@@ -10,6 +10,12 @@
 .page {
   display: grid;
   gap: 1.25rem;
+
+  // Sin esto, el tablero ancho impide encoger los items del grid
+  // (min-width: auto) y aparece scroll horizontal en toda la página
+  > * {
+    min-width: 0;
+  }
 }
 
 .header {
@@ -56,6 +62,10 @@
   display: grid;
   gap: 1.5rem;
   grid-template-columns: 1fr;
+
+  > * {
+    min-width: 0;
+  }
 
   @media (min-width: 900px) {
     grid-template-columns: 3fr 2fr;

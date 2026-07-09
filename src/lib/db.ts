@@ -20,6 +20,7 @@ import type {
   Campaign,
   Character,
   CharacterNote,
+  Encounter,
   NoteVisibility,
 } from "@/types";
 
@@ -239,7 +240,7 @@ export async function setBoardTokenHp(
   });
 }
 
-const MAX_BOARD_LOG = 20;
+const MAX_BOARD_LOG = 50;
 
 /** Añade una entrada al registro de combate, manteniéndolo acotado. */
 export async function appendBoardLog(
@@ -251,4 +252,39 @@ export async function appendBoardLog(
   await updateDoc(doc(getDb(), "campaigns", campaignId), {
     boardLog: [entry, ...currentLog].slice(0, MAX_BOARD_LOG),
   });
+}
+
+/** Marca los estados de una ficha (Envenenado, Derribado…). */
+export async function setBoardTokenConditions(
+  campaignId: string,
+  tokenId: string,
+  conditions: string[]
+): Promise<void> {
+  await updateDoc(doc(getDb(), "campaigns", campaignId), {
+    [`tokens.${tokenId}.conditions`]: conditions,
+  });
+}
+
+/** Publica (o termina, con null) el encuentro compartido de la campaña. */
+export async function setCampaignEncounter(
+  campaignId: string,
+  encounter: Encounter | null
+): Promise<void> {
+  await updateDoc(doc(getDb(), "campaigns", campaignId), { encounter });
+}
+
+/** Elimina una entrada concreta del registro de combate. */
+export async function removeBoardLogEntry(
+  campaignId: string,
+  currentLog: BoardLogEntry[],
+  entryId: string
+): Promise<void> {
+  await updateDoc(doc(getDb(), "campaigns", campaignId), {
+    boardLog: currentLog.filter((entry) => entry.id !== entryId),
+  });
+}
+
+/** Vacía el registro de combate por completo. */
+export async function clearBoardLog(campaignId: string): Promise<void> {
+  await updateDoc(doc(getDb(), "campaigns", campaignId), { boardLog: [] });
 }

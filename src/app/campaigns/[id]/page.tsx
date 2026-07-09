@@ -122,17 +122,10 @@ function CampaignView({ campaignId }: { campaignId: string }) {
           )}
         </section>
 
-        {isDM && (
-          <section>
-            <h2 className={styles.sectionHeading}>Iniciativa</h2>
-            <InitiativeTracker
-              characters={characters}
-              enemyTokens={Object.values(campaign.tokens ?? {}).filter(
-                (token) => token.characterId === null
-              )}
-            />
-          </section>
-        )}
+        <section>
+          <h2 className={styles.sectionHeading}>Iniciativa</h2>
+          <InitiativeTracker campaign={campaign} characters={characters} isDM={isDM} />
+        </section>
       </div>
     </div>
   );

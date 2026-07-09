@@ -1,214 +1,252 @@
 "use client";
 
-import { useState } from "react";
-import type { BoardToken, Character, Combatant } from "@/types";
+import { useMemo, useState } from "react";
+import { appendBoardLog, setCampaignEncounter } from "@/lib/db";
+import { generateDungeon } from "@/utils/mapgen";
+import { initiativeTotal } from "@/utils/character";
+import type { BoardToken, Campaign, Character, Combatant, Encounter } from "@/types";
 import styles from "./InitiativeTracker.module.scss";
 
 interface InitiativeTrackerProps {
+  campaign: Campaign;
   characters: Character[];
-  /** Fichas enemigas del tablero, para importarlas al encuentro. */
-  enemyTokens?: BoardToken[];
+  isDM: boolean;
+}
+
+const d20 = () => 1 + Math.floor(Math.random() * 20);
+
+/** Ordena por iniciativa descendente; el índice de turno apunta a este orden. */
+export function sortedCombatants(encounter: Encounter): Combatant[] {
+  return [...encounter.combatants].sort((a, b) => b.initiative - a.initiative);
 }
 
 /**
- * Rastreador de iniciativa para el máster. Es una herramienta de sesión:
- * el estado vive en memoria y se reinicia al recargar la página.
+ * Rastreador de iniciativa compartido: vive en la campaña, lo gestiona el
+ * máster y todos los jugadores ven el orden de turnos en tiempo real.
  */
-export function InitiativeTracker({ characters, enemyTokens = [] }: InitiativeTrackerProps) {
-  const [combatants, setCombatants] = useState<Combatant[]>([]);
-  const [turnIndex, setTurnIndex] = useState(0);
-  const [round, setRound] = useState(1);
+export function InitiativeTracker({ campaign, characters, isDM }: InitiativeTrackerProps) {
   const [name, setName] = useState("");
   const [initiative, setInitiative] = useState("");
-  const [hp, setHp] = useState("");
 
-  const sorted = [...combatants].sort((a, b) => b.initiative - a.initiative);
+  const encounter = campaign.encounter ?? null;
+  const tokens = Object.values(campaign.tokens ?? {});
+  const sorted = encounter ? sortedCombatants(encounter) : [];
 
-  const addCombatant = (combatant: Combatant) => {
-    setCombatants((prev) => [...prev, combatant]);
+  // Mismo criterio que la niebla de guerra del tablero: los enemigos de salas
+  // sin descubrir no entran en la iniciativa (delatarían la emboscada)
+  const map = useMemo(
+    () => (campaign.board ? generateDungeon(campaign.board) : null),
+    [campaign.board]
+  );
+  const hiddenFromPlayers = (token: BoardToken): boolean => {
+    if (!map) return false;
+    const room = map.rooms.findIndex(
+      (r) => token.x >= r.x && token.x < r.x + r.w && token.y >= r.y && token.y < r.y + r.h
+    );
+    return room >= 0 && !(campaign.revealedRooms ?? []).includes(room);
+  };
+
+  const save = (next: Encounter | null) => setCampaignEncounter(campaign.id, next);
+  const log = (text: string) => appendBoardLog(campaign.id, campaign.boardLog ?? [], text);
+
+  /** PG en vivo del combatiente: personaje (jugadores) o ficha (enemigos). */
+  const hpOf = (combatant: Combatant): string => {
+    const character = characters.find((c) => c.id === combatant.id);
+    if (character) return `${character.currentHp}/${character.maxHp}`;
+    const token = tokens.find((t) => t.id === combatant.id);
+    return token?.maxHp ? `${token.hp ?? 0}/${token.maxHp}` : "—";
+  };
+
+  const handleStart = async () => {
+    // Jugadores con su bono real; los enemigos vivos del tablero con d20
+    const players: Combatant[] = characters.map((character) => ({
+      id: character.id,
+      name: character.name || "PJ",
+      initiative: d20() + initiativeTotal(character),
+      isPlayer: true,
+    }));
+    const enemies: Combatant[] = tokens
+      .filter(
+        (token) =>
+          token.characterId === null && (token.hp ?? 0) > 0 && !hiddenFromPlayers(token)
+      )
+      .map((token) => ({
+        id: token.id,
+        name: token.name,
+        initiative: d20(),
+        isPlayer: false,
+      }));
+    const combatants = [...players, ...enemies];
+    if (combatants.length === 0) return;
+    await save({ combatants, turnIndex: 0, round: 1 });
+    const order = [...combatants]
+      .sort((a, b) => b.initiative - a.initiative)
+      .map((c) => `${c.name} (${c.initiative})`)
+      .join(" → ");
+    await log(`⚔ ¡Empieza el combate! Orden: ${order}`);
+  };
+
+  const handleEnd = async () => {
+    await save(null);
+    await log("🕊 El combate termina.");
+  };
+
+  const handleNextTurn = () => {
+    if (!encounter || sorted.length === 0) return;
+    const next = (encounter.turnIndex + 1) % sorted.length;
+    save({
+      ...encounter,
+      turnIndex: next,
+      round: next === 0 ? encounter.round + 1 : encounter.round,
+    });
   };
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
-    addCombatant({
-      id: crypto.randomUUID(),
-      name: name.trim(),
-      initiative: parseInt(initiative, 10) || 0,
-      hp: parseInt(hp, 10) || 0,
-      maxHp: parseInt(hp, 10) || 0,
-      isPlayer: false,
+    if (!encounter || !name.trim()) return;
+    save({
+      ...encounter,
+      combatants: [
+        ...encounter.combatants,
+        {
+          id: crypto.randomUUID(),
+          name: name.trim(),
+          initiative: parseInt(initiative, 10) || d20(),
+          isPlayer: false,
+        },
+      ],
     });
     setName("");
     setInitiative("");
-    setHp("");
   };
 
-  const importPlayers = () => {
-    const existing = new Set(combatants.map((c) => c.id));
-    characters
-      .filter((character) => !existing.has(character.id))
-      .forEach((character) =>
-        addCombatant({
-          id: character.id,
-          name: character.name || "Sin nombre",
-          initiative: 0,
-          hp: character.currentHp,
-          maxHp: character.maxHp,
-          isPlayer: true,
-        })
-      );
+  const handleRemove = (id: string) => {
+    if (!encounter) return;
+    const combatants = encounter.combatants.filter((c) => c.id !== id);
+    save({
+      ...encounter,
+      combatants,
+      turnIndex: Math.min(encounter.turnIndex, Math.max(0, combatants.length - 1)),
+    });
   };
 
-  const importEnemies = () => {
-    const existing = new Set(combatants.map((c) => c.id));
-    enemyTokens
-      .filter((token) => !existing.has(token.id) && (token.hp ?? 0) > 0)
-      .forEach((token) =>
-        addCombatant({
-          id: token.id,
-          name: token.name,
-          // El máster tira la iniciativa de sus monstruos: d20 al importar
-          initiative: 1 + Math.floor(Math.random() * 20),
-          hp: token.hp ?? 0,
-          maxHp: token.maxHp ?? token.hp ?? 0,
-          isPlayer: false,
-        })
-      );
+  const handleInitiativeChange = (id: string, value: number) => {
+    if (!encounter) return;
+    save({
+      ...encounter,
+      combatants: encounter.combatants.map((c) =>
+        c.id === id ? { ...c, initiative: value } : c
+      ),
+    });
   };
 
-  const updateCombatant = (id: string, patch: Partial<Combatant>) => {
-    setCombatants((prev) => prev.map((c) => (c.id === id ? { ...c, ...patch } : c)));
-  };
-
-  const removeCombatant = (id: string) => {
-    setCombatants((prev) => prev.filter((c) => c.id !== id));
-    setTurnIndex(0);
-  };
-
-  const nextTurn = () => {
-    if (sorted.length === 0) return;
-    const next = (turnIndex + 1) % sorted.length;
-    if (next === 0) setRound((r) => r + 1);
-    setTurnIndex(next);
-  };
-
-  const reset = () => {
-    setCombatants([]);
-    setTurnIndex(0);
-    setRound(1);
-  };
+  if (!encounter) {
+    return (
+      <div className="panel">
+        {isDM ? (
+          <>
+            <p className={styles.empty}>
+              No hay ningún combate en curso. Al iniciarlo se tira la iniciativa de todos:
+              los personajes con su bono y los enemigos vivos del tablero con un d20.
+            </p>
+            <button
+              type="button"
+              className="btn btn--gold btn--sm"
+              onClick={handleStart}
+              disabled={characters.length === 0 && tokens.length === 0}
+            >
+              ⚔ Iniciar combate
+            </button>
+          </>
+        ) : (
+          <p className={styles.empty}>No hay ningún combate en curso.</p>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="panel">
       <div className={styles.topRow}>
-        <span className={styles.round}>Ronda {round}</span>
-        <div className={styles.topActions}>
-          <button
-            type="button"
-            className="btn btn--sm"
-            onClick={importPlayers}
-            disabled={characters.length === 0}
-          >
-            + Jugadores
-          </button>
-          <button
-            type="button"
-            className="btn btn--sm"
-            onClick={importEnemies}
-            disabled={enemyTokens.filter((t) => (t.hp ?? 0) > 0).length === 0}
-            title="Importa los enemigos vivos del tablero y tira su iniciativa (d20)"
-          >
-            + Enemigos
-          </button>
-          <button
-            type="button"
-            className="btn btn--gold btn--sm"
-            onClick={nextTurn}
-            disabled={sorted.length === 0}
-          >
-            Siguiente turno ➤
-          </button>
-          <button type="button" className="btn btn--danger btn--sm" onClick={reset}>
-            Reiniciar
-          </button>
-        </div>
+        <span className={styles.round}>Ronda {encounter.round}</span>
+        {isDM && (
+          <div className={styles.topActions}>
+            <button
+              type="button"
+              className="btn btn--gold btn--sm"
+              onClick={handleNextTurn}
+              disabled={sorted.length === 0}
+            >
+              Siguiente turno ➤
+            </button>
+            <button type="button" className="btn btn--danger btn--sm" onClick={handleEnd}>
+              Terminar combate
+            </button>
+          </div>
+        )}
       </div>
 
-      <form onSubmit={handleAdd} className={styles.addRow}>
-        <input
-          className="input"
-          placeholder="Goblin, Dragón…"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <input
-          className={`input ${styles.numInput}`}
-          type="number"
-          placeholder="Inic."
-          value={initiative}
-          onChange={(e) => setInitiative(e.target.value)}
-        />
-        <input
-          className={`input ${styles.numInput}`}
-          type="number"
-          placeholder="PG"
-          value={hp}
-          onChange={(e) => setHp(e.target.value)}
-        />
-        <button type="submit" className="btn btn--sm" disabled={!name.trim()}>
-          +
-        </button>
-      </form>
+      {isDM && (
+        <form onSubmit={handleAdd} className={styles.addRow}>
+          <input
+            className="input"
+            placeholder="Refuerzo sorpresa…"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <input
+            className={`input ${styles.numInput}`}
+            type="number"
+            placeholder="Inic."
+            title="Iniciativa (vacío = d20)"
+            value={initiative}
+            onChange={(e) => setInitiative(e.target.value)}
+          />
+          <button type="submit" className="btn btn--sm" disabled={!name.trim()}>
+            +
+          </button>
+        </form>
+      )}
 
-      {sorted.length === 0 ? (
-        <p className={styles.empty}>Añade combatientes para empezar el encuentro.</p>
-      ) : (
-        <ul className={styles.list}>
-          {sorted.map((combatant, index) => (
-            <li
-              key={combatant.id}
-              className={`${styles.row} ${index === turnIndex ? styles.active : ""}`}
-            >
-              <span className={styles.turnMarker}>{index === turnIndex ? "➤" : ""}</span>
+      <ul className={styles.list}>
+        {sorted.map((combatant, index) => (
+          <li
+            key={combatant.id}
+            className={`${styles.row} ${index === encounter.turnIndex ? styles.active : ""}`}
+          >
+            <span className={styles.turnMarker}>
+              {index === encounter.turnIndex ? "➤" : ""}
+            </span>
+            {isDM ? (
               <input
                 className={`input ${styles.numInput}`}
                 type="number"
                 title="Iniciativa"
                 value={combatant.initiative}
                 onChange={(e) =>
-                  updateCombatant(combatant.id, {
-                    initiative: parseInt(e.target.value, 10) || 0,
-                  })
+                  handleInitiativeChange(combatant.id, parseInt(e.target.value, 10) || 0)
                 }
               />
-              <span className={styles.name}>
-                {combatant.name}
-                {combatant.isPlayer && <span className="badge"> PJ</span>}
-              </span>
-              <div className={styles.hpGroup}>
-                <input
-                  className={`input ${styles.numInput}`}
-                  type="number"
-                  title="Puntos de golpe"
-                  value={combatant.hp}
-                  onChange={(e) =>
-                    updateCombatant(combatant.id, { hp: parseInt(e.target.value, 10) || 0 })
-                  }
-                />
-                <span className={styles.maxHp}>/ {combatant.maxHp}</span>
-              </div>
+            ) : (
+              <span className={styles.initiative}>{combatant.initiative}</span>
+            )}
+            <span className={styles.name}>
+              {combatant.name}
+              {combatant.isPlayer && <span className="badge"> PJ</span>}
+            </span>
+            <span className={styles.maxHp}>❤ {hpOf(combatant)}</span>
+            {isDM && (
               <button
                 type="button"
                 className="btn btn--danger btn--sm"
-                onClick={() => removeCombatant(combatant.id)}
+                onClick={() => handleRemove(combatant.id)}
               >
                 ✕
               </button>
-            </li>
-          ))}
-        </ul>
-      )}
+            )}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

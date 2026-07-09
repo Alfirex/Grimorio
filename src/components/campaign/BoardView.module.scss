@@ -22,6 +22,7 @@
 
 .enemyForm {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.4rem;
 
   input {
@@ -51,6 +52,7 @@
   border: 1px solid $color-border;
   border-radius: $radius-sm;
   max-height: 70vh;
+  max-width: 100%;
   overflow: auto;
 }
 
@@ -97,6 +99,78 @@
 
 .tokenDead {
   filter: grayscale(1) brightness(0.6);
+}
+
+// Ficha con el turno activo en el encuentro
+.tokenActive {
+  animation: turn-pulse 1.6s ease-in-out infinite;
+  z-index: 3;
+}
+
+@keyframes turn-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px rgba($color-gold, 0.9), 0 2px 8px rgba(0, 0, 0, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba($color-gold, 0.35), 0 2px 8px rgba(0, 0, 0, 0.6);
+  }
+}
+
+.tokenConditions {
+  font-size: 0.6rem;
+  left: 50%;
+  letter-spacing: -0.1em;
+  pointer-events: none;
+  position: absolute;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+  top: -11px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.tokenTools {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
+}
+
+.conditionRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.conditionChip {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid $color-border;
+  border-radius: 999px;
+  color: $color-muted;
+  cursor: pointer;
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  transition: border-color 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    border-color: $color-border-light;
+    color: $color-cream;
+  }
+}
+
+.conditionOn {
+  background: rgba($color-gold, 0.12);
+  border-color: $color-gold;
+  color: $color-gold-light;
+}
+
+.hpAdjust {
+  align-items: center;
+  display: flex;
+  flex-shrink: 0;
+  gap: 0.35rem;
 }
 
 // Solo lo ve el DM: enemigo aún invisible para los jugadores
@@ -297,19 +371,78 @@
   padding-top: 0.6rem;
 }
 
-.logTitle {
-  @include ornament-title;
-  font-size: 0.7rem;
+.logHeader {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
   margin-bottom: 0.4rem;
 }
 
+.logTitle {
+  @include ornament-title;
+  font-size: 0.7rem;
+  margin-bottom: 0;
+}
+
+.logList {
+  @include scrollbar-thin;
+  list-style: none;
+  margin: 0;
+  max-height: 14rem;
+  overflow-y: auto;
+  padding: 0;
+}
+
 .logEntry {
+  align-items: baseline;
   border-bottom: 1px solid rgba($color-border, 0.4);
   color: $color-cream;
+  display: flex;
   font-size: 0.82rem;
+  gap: 0.5rem;
   padding: 0.25rem 0;
 
   &:first-child {
     color: $color-gold-light;
   }
+
+  &:hover .logDelete {
+    opacity: 1;
+  }
+}
+
+.logTime {
+  color: $color-muted;
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.logText {
+  flex: 1;
+  min-width: 0;
+}
+
+.logDelete {
+  background: none;
+  border: none;
+  color: $color-muted;
+  cursor: pointer;
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  opacity: 0;
+  padding: 0 0.2rem;
+  transition: opacity 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    color: $color-blood-light;
+  }
+}
+
+.abilityRow {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: space-between;
 }
