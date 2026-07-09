@@ -16,10 +16,19 @@ import {
   ALIGNMENTS,
   BACKGROUNDS,
   CLASSES,
+  DEITIES,
   RACES,
   SKILLS,
   SPELL_LEVEL_LABELS,
 } from "@/data/dnd5e";
+import {
+  CLASS_CONTENT,
+  featuresFor,
+  maxSpellLevelFor,
+  spellAbilityFor,
+  spellSlotsFor,
+  spellsFor,
+} from "@/data/srd";
 import {
   abilityModifier,
   formatModifier,
@@ -107,6 +116,7 @@ export function CharacterSheet({ characterId }: { characterId: string }) {
   };
 
   const profBonus = proficiencyBonus(character.level);
+  const chosenDeity = DEITIES.find((deity) => deity.name === character.deity);
 
   return (
     <div className={styles.sheet}>
@@ -209,8 +219,12 @@ export function CharacterSheet({ characterId }: { characterId: string }) {
                 className="input"
                 value={character.characterClass}
                 onChange={(e) =>
+                  // Al cambiar de clase, la subclase deja de tener sentido y la
+                  // característica de conjuros pasa a la propia de la nueva clase
                   set({
                     characterClass: e.target.value,
+                    subclass: "",
+                    spellcastingAbility: spellAbilityFor(e.target.value, ""),
                   })
                 }
               >
@@ -219,14 +233,7 @@ export function CharacterSheet({ characterId }: { characterId: string }) {
                 ))}
               </select>
             </label>
-            <label>
-              <span className="field-label">Subclase</span>
-              <input
-                className="input"
-                value={character.subclass}
-                onChange={(e) => set({ subclass: e.target.value })}
-              />
-            </label>
+            <SubclassField character={character} onChange={set} />
             <label>
               <span className="field-label">Nivel</span>
               <input
@@ -259,6 +266,30 @@ export function CharacterSheet({ characterId }: { characterId: string }) {
               >
                 {ALIGNMENTS.map((alignment) => (
                   <option key={alignment}>{alignment}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span className="field-label">Deidad / Fe</span>
+              <select
+                className="input"
+                value={character.deity ?? ""}
+                title={
+                  chosenDeity
+                    ? `${chosenDeity.name}, ${chosenDeity.title} · Dominios sugeridos: ${chosenDeity.domains}`
+                    : undefined
+                }
+                onChange={(e) => set({ deity: e.target.value })}
+              >
+                <option value="">— No sigue ninguna fe —</option>
+                {/* Conserva deidades propias de la campaña escritas antes a mano */}
+                {character.deity && !DEITIES.some((d) => d.name === character.deity) && (
+                  <option value={character.deity}>{character.deity}</option>
+                )}
+                {DEITIES.map((deity) => (
+                  <option key={deity.name} value={deity.name}>
+                    {deity.name} · {deity.title}
+                  </option>
                 ))}
               </select>
             </label>
@@ -510,6 +541,8 @@ export function CharacterSheet({ characterId }: { characterId: string }) {
               </div>
 
               <DeathSavesEditor character={character} onChange={set} />
+
+              {isOwner && <RestButtons character={character} onChange={set} />}
             </section>
 
             {/* ---------- Ataques ---------- */}
@@ -557,6 +590,25 @@ export function CharacterSheet({ characterId }: { characterId: string }) {
                     onChange={(e) => {
                       const attacks = [...character.attacks];
                       attacks[index] = { ...attack, type: e.target.value };
+                      set({ attacks });
+                    }}
+                  />
+                  <input
+                    className="input"
+                    type="number"
+                    min={5}
+                    step={5}
+                    placeholder="c.c."
+                    title="Alcance en pies (vacío = cuerpo a cuerpo)"
+                    value={attack.range ?? ""}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value, 10);
+                      const attacks = [...character.attacks];
+                      const updated = { ...attack };
+                      // Sin valor, el campo desaparece: el ataque vuelve a ser cuerpo a cuerpo
+                      if (Number.isNaN(value)) delete updated.range;
+                      else updated.range = value;
+                      attacks[index] = updated;
                       set({ attacks });
                     }}
                   />
@@ -651,6 +703,7 @@ export function CharacterSheet({ characterId }: { characterId: string }) {
               </label>
             ))}
           </div>
+          {isOwner && <ClassFeaturesPicker character={character} onChange={set} />}
           <label>
             <span className="field-label">Rasgos y atributos de clase</span>
             <textarea
@@ -731,8 +784,34 @@ function SpellsSection({
   isOwner: boolean;
 }) {
   const [newSpellLevel, setNewSpellLevel] = useState(0);
+  const [newSpellPick, setNewSpellPick] = useState("");
   const dc = spellSaveDC(character);
   const attackBonus = spellAttackBonus(character);
+
+  // Listado del reglamento filtrado por la clase (o subclase lanzadora) y nivel
+  const maxLevel = maxSpellLevelFor(
+    character.characterClass,
+    character.subclass,
+    character.level
+  );
+  const suggestions = spellsFor(character.characterClass, character.subclass, newSpellLevel);
+
+  const handleAddSpell = () => {
+    const picked = suggestions.find((spell) => spell.name === newSpellPick);
+    onChange({
+      spells: [
+        ...character.spells,
+        {
+          id: crypto.randomUUID(),
+          name: picked?.name ?? "",
+          level: newSpellLevel,
+          prepared: false,
+          description: picked?.description ?? "",
+        },
+      ],
+    });
+    setNewSpellPick("");
+  };
 
   return (
     <section className="panel">
@@ -771,7 +850,31 @@ function SpellsSection({
 
       {character.spellcastingAbility && (
         <>
-          <h3 className={styles.subTitle}>Espacios de conjuro</h3>
+          <div className={styles.slotsHeader}>
+            <h3 className={styles.subTitle}>Espacios de conjuro</h3>
+            {isOwner && spellSlotsFor(character.characterClass, character.subclass, character.level).some((n) => n > 0) && (
+              <button
+                type="button"
+                className="btn btn--sm"
+                title="Rellena los espacios con la tabla del reglamento para tu clase y nivel"
+                onClick={() => {
+                  const suggested = spellSlotsFor(
+                    character.characterClass,
+                    character.subclass,
+                    character.level
+                  );
+                  onChange({
+                    spellSlots: suggested.map((total, i) => ({
+                      total,
+                      used: Math.min(character.spellSlots[i]?.used ?? 0, total),
+                    })),
+                  });
+                }}
+              >
+                📜 Según clase y nivel
+              </button>
+            )}
+          </div>
           <div className={styles.slotsRow}>
             {character.spellSlots.map((slot, index) => (
               <div key={index} className={styles.slotBox}>
@@ -882,39 +985,240 @@ function SpellsSection({
               <select
                 className={`input ${styles.smallInput}`}
                 value={newSpellLevel}
-                onChange={(e) => setNewSpellLevel(Number(e.target.value))}
+                onChange={(e) => {
+                  setNewSpellLevel(Number(e.target.value));
+                  setNewSpellPick("");
+                }}
               >
-                {SPELL_LEVEL_LABELS.map((label, level) => (
-                  <option key={level} value={level}>
-                    {label}
-                  </option>
-                ))}
+                {SPELL_LEVEL_LABELS.map((label, level) => {
+                  // Marca los niveles que la clase aún no puede lanzar
+                  const locked = maxLevel > 0 && level > maxLevel;
+                  return (
+                    <option key={level} value={level}>
+                      {label}
+                      {locked ? " 🔒" : ""}
+                    </option>
+                  );
+                })}
               </select>
-              <button
-                type="button"
-                className="btn btn--sm"
-                onClick={() =>
-                  onChange({
-                    spells: [
-                      ...character.spells,
-                      {
-                        id: crypto.randomUUID(),
-                        name: "",
-                        level: newSpellLevel,
-                        prepared: false,
-                        description: "",
-                      },
-                    ],
-                  })
-                }
-              >
+              {suggestions.length > 0 && (
+                <select
+                  className="input"
+                  value={newSpellPick}
+                  title={`Conjuros de ${SPELL_LEVEL_LABELS[newSpellLevel].toLowerCase()} de tu clase`}
+                  onChange={(e) => setNewSpellPick(e.target.value)}
+                >
+                  <option value="">— Escribir uno propio —</option>
+                  {suggestions.map((spell) => (
+                    <option key={spell.name} value={spell.name}>
+                      {spell.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+              <button type="button" className="btn btn--sm" onClick={handleAddSpell}>
                 + Añadir conjuro
               </button>
+              {maxLevel > 0 && (
+                <span className={styles.spellHint}>
+                  Tu clase lanza conjuros de hasta nivel {maxLevel} al nivel {character.level}.
+                </span>
+              )}
             </div>
           )}
         </>
       )}
     </section>
+  );
+}
+
+/** Descanso corto (gastar dados de golpe) y descanso largo. */
+function RestButtons({
+  character,
+  onChange,
+}: {
+  character: Character;
+  onChange: (patch: Partial<Character>) => void;
+}) {
+  const [lastRoll, setLastRoll] = useState("");
+  const die = hitDieForClass(character.characterClass);
+  const canSpendDie =
+    character.hitDiceUsed < character.hitDiceTotal &&
+    character.currentHp < character.maxHp;
+
+  const spendHitDie = () => {
+    const roll = 1 + Math.floor(Math.random() * die);
+    const healed = Math.max(1, roll + abilityModifier(character.abilities.con));
+    onChange({
+      currentHp: Math.min(character.maxHp, character.currentHp + healed),
+      hitDiceUsed: character.hitDiceUsed + 1,
+    });
+    setLastRoll(`🎲 d${die} = ${roll} + CON → recuperas ${healed} PG`);
+  };
+
+  const longRest = () => {
+    if (
+      !window.confirm(
+        "¿Descanso largo? Recuperas todos los PG, los espacios de conjuro, las salvaciones de muerte y la mitad de los dados de golpe."
+      )
+    )
+      return;
+    onChange({
+      currentHp: character.maxHp,
+      tempHp: 0,
+      hitDiceUsed: Math.max(
+        0,
+        character.hitDiceUsed - Math.max(1, Math.floor(character.hitDiceTotal / 2))
+      ),
+      deathSaves: { successes: 0, failures: 0 },
+      spellSlots: character.spellSlots.map((slot) => ({ ...slot, used: 0 })),
+    });
+    setLastRoll("");
+  };
+
+  return (
+    <div className={styles.restRow}>
+      <button
+        type="button"
+        className="btn btn--sm"
+        disabled={!canSpendDie}
+        title={`Descanso corto: tira 1d${die} + CON y cura eso (gasta un dado de golpe)`}
+        onClick={spendHitDie}
+      >
+        🎲 Gastar dado de golpe (d{die})
+      </button>
+      <button type="button" className="btn btn--sm" onClick={longRest}>
+        🌙 Descanso largo
+      </button>
+      {lastRoll && <span className={styles.restNote}>{lastRoll}</span>}
+    </div>
+  );
+}
+
+/** Selector de subclase con las opciones del reglamento para la clase actual. */
+function SubclassField({
+  character,
+  onChange,
+}: {
+  character: Character;
+  onChange: (patch: Partial<Character>) => void;
+}) {
+  const content = CLASS_CONTENT[character.characterClass];
+  const options = content?.subclasses.map((sub) => sub.name) ?? [];
+
+  if (options.length === 0) {
+    return (
+      <label>
+        <span className="field-label">Subclase</span>
+        <input
+          className="input"
+          value={character.subclass}
+          onChange={(e) => onChange({ subclass: e.target.value })}
+        />
+      </label>
+    );
+  }
+
+  return (
+    <label>
+      <span className="field-label">
+        {content.subclassLabel} (nv {content.subclassLevel})
+      </span>
+      <select
+        className="input"
+        value={character.subclass}
+        onChange={(e) => {
+          const subclass = e.target.value;
+          // Un Caballero Sobrenatural o Embaucador Arcano empieza a lanzar conjuros
+          const ability = spellAbilityFor(character.characterClass, subclass);
+          onChange({
+            subclass,
+            ...(ability && !character.spellcastingAbility
+              ? { spellcastingAbility: ability }
+              : {}),
+          });
+        }}
+      >
+        <option value="">— Sin elegir —</option>
+        {/* Conserva valores antiguos escritos a mano aunque no estén en la lista */}
+        {character.subclass && !options.includes(character.subclass) && (
+          <option value={character.subclass}>{character.subclass}</option>
+        )}
+        {options.map((name) => (
+          <option key={name} value={name}>
+            {name}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+/** Rasgos de clase y subclase del reglamento hasta el nivel actual, para añadirlos a la ficha. */
+function ClassFeaturesPicker({
+  character,
+  onChange,
+}: {
+  character: Character;
+  onChange: (patch: Partial<Character>) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const available = featuresFor(character.characterClass, character.subclass, character.level);
+  if (available.length === 0) return null;
+
+  const isAdded = (name: string) => character.featuresAndTraits.includes(name);
+  const pending = available.filter((feature) => !isAdded(feature.name));
+
+  const appendFeatures = (features: typeof available) => {
+    const lines = features.map(
+      (feature) => `Nv ${feature.level} — ${feature.name}: ${feature.description}`
+    );
+    const current = character.featuresAndTraits.trimEnd();
+    onChange({
+      featuresAndTraits: current ? `${current}\n${lines.join("\n")}` : lines.join("\n"),
+    });
+  };
+
+  return (
+    <div className={styles.featurePicker}>
+      <div className={styles.featurePickerHeader}>
+        <button type="button" className="btn btn--sm" onClick={() => setOpen((v) => !v)}>
+          {open ? "▾" : "▸"} Rasgos de {character.characterClass}
+          {character.subclass ? ` (${character.subclass})` : ""} hasta nivel {character.level}
+        </button>
+        {pending.length > 0 && (
+          <button
+            type="button"
+            className="btn btn--gold btn--sm"
+            onClick={() => appendFeatures(pending)}
+          >
+            + Añadir los {pending.length} pendientes
+          </button>
+        )}
+      </div>
+      {open && (
+        <ul className={styles.featureList}>
+          {available.map((feature) => (
+            <li key={`${feature.level}-${feature.name}`} className={styles.featureRow}>
+              <span>
+                <strong>
+                  Nv {feature.level} — {feature.name}:
+                </strong>{" "}
+                {feature.description}
+              </span>
+              <button
+                type="button"
+                className="btn btn--sm"
+                disabled={isAdded(feature.name)}
+                onClick={() => appendFeatures([feature])}
+              >
+                {isAdded(feature.name) ? "✓" : "+"}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 

@@ -253,7 +253,7 @@
 .attackRow {
   display: grid;
   gap: 0.4rem;
-  grid-template-columns: 2fr 0.8fr 1.2fr 1.2fr auto;
+  grid-template-columns: 2fr 0.8fr 1.2fr 1.2fr 0.9fr auto;
   margin-bottom: 0.4rem;
 }
 
@@ -327,12 +327,81 @@
 }
 
 .addSpellRow {
+  align-items: center;
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
   margin-top: 0.5rem;
 
   select {
     width: auto;
+  }
+}
+
+.spellHint {
+  color: $color-muted;
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+.featurePicker {
+  background: $color-panel-light;
+  border: 1px solid $color-border;
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+  padding: 0.6rem;
+}
+
+.featurePickerHeader {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: space-between;
+}
+
+.featureList {
+  display: grid;
+  gap: 0.35rem;
+  list-style: none;
+  margin: 0.6rem 0 0;
+  padding: 0;
+}
+
+.featureRow {
+  align-items: center;
+  display: flex;
+  font-size: 0.85rem;
+  gap: 0.5rem;
+  justify-content: space-between;
+
+  strong {
+    color: $color-gold-light;
+  }
+}
+
+.restRow {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.restNote {
+  color: $color-gold-light;
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+.slotsHeader {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+
+  button {
+    flex-shrink: 0;
   }
 }
 
