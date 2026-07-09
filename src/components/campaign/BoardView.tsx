@@ -68,6 +68,7 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
   const [enemyHp, setEnemyHp] = useState("7");
   const [enemyAc, setEnemyAc] = useState("13");
   const [enemySpeed, setEnemySpeed] = useState("30");
+  const [enemyXp, setEnemyXp] = useState("25");
   const [enemyRoom, setEnemyRoom] = useState("0");
 
   const board = campaign.board ?? null;
@@ -356,6 +357,7 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
         ac: Math.max(1, parseInt(enemyAc, 10) || 10),
         speed: Math.max(FEET_PER_CELL, parseInt(enemySpeed, 10) || 30),
         loot: "1d6",
+        xp: Math.max(0, parseInt(enemyXp, 10) || 0),
       });
       setEnemyName("");
       return;
@@ -373,6 +375,7 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
       attacks: monster.attacks,
       abilities: monster.abilities,
       loot: monster.loot,
+      xp: monster.xp,
       image: monster.image,
     });
   };
@@ -403,10 +406,12 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
 
   const handleLoot = async (room: number, bodies: BoardToken[]) => {
     let gold = 0;
+    let totalXp = 0;
     for (const body of bodies) {
       const expr = body.loot ?? "0";
       const rolled = rollDice(expr);
       gold += rolled ? rolled.total : Math.max(0, parseInt(expr, 10) || 0);
+      totalXp += body.xp ?? 0;
     }
     for (const body of bodies) {
       await removeBoardToken(campaign.id, body.id);
@@ -416,8 +421,15 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
         money: { ...myCharacter.money, gp: myCharacter.money.gp + gold },
       });
     }
+    // Los PX se reparten entre todos los personajes de la campaña
+    const xpEach = characters.length > 0 ? Math.ceil(totalXp / characters.length) : 0;
+    if (xpEach > 0) {
+      for (const character of characters) {
+        await updateCharacter(character.id, { xp: character.xp + xpEach });
+      }
+    }
     await appendLog(
-      `💰 ${myCharacter?.name || "El máster"} saquea la sala ${room + 1}: ${gold} mo · ${bodies.length} cuerpo${bodies.length !== 1 ? "s" : ""} retirado${bodies.length !== 1 ? "s" : ""}.`
+      `💰 ${myCharacter?.name || "El máster"} saquea la sala ${room + 1}: ${gold} mo · ${bodies.length} cuerpo${bodies.length !== 1 ? "s" : ""} retirado${bodies.length !== 1 ? "s" : ""}.${xpEach > 0 ? ` ⭐ ${totalXp} PX: +${xpEach} para cada héroe.` : ""}`
     );
     setSelectedId(null);
     setCombat(null);
@@ -483,7 +495,7 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
               >
                 {BESTIARY.map((monster, i) => (
                   <option key={monster.name} value={i}>
-                    {monster.name} · {monster.hp} PG · CA {monster.ac}
+                    {monster.name} · VD {monster.cr} · {monster.hp} PG · CA {monster.ac}
                   </option>
                 ))}
                 <option value="custom">Personalizado…</option>
@@ -523,6 +535,15 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
                     placeholder="Vel."
                     value={enemySpeed}
                     onChange={(e) => setEnemySpeed(e.target.value)}
+                  />
+                  <input
+                    className={`input ${styles.statInput}`}
+                    type="number"
+                    min={0}
+                    title="PX que reparte al morir"
+                    placeholder="PX"
+                    value={enemyXp}
+                    onChange={(e) => setEnemyXp(e.target.value)}
                   />
                 </>
               )}
@@ -1030,7 +1051,7 @@ function MonsterCard({ monster }: { monster: MonsterDef }) {
       <div className={styles.monsterInfo}>
         <h3 className={styles.monsterName}>{monster.name}</h3>
         <p className={styles.monsterStats}>
-          ❤ {monster.hp} PG · 🛡 CA {monster.ac} · 👣 {monster.speed} pies · 💰 {monster.loot === "0" ? "sin botín" : `${monster.loot} mo`}
+          ⚔ VD {monster.cr} ({monster.xp} PX) · ❤ {monster.hp} PG · 🛡 CA {monster.ac} · 👣 {monster.speed} pies · 💰 {monster.loot === "0" ? "sin botín" : `${monster.loot} mo`}
         </p>
         <ul className={styles.monsterList}>
           {monster.attacks.map((attack) => (

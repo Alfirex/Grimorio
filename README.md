@@ -18,12 +18,13 @@ generador procedural de mapas de mazmorra y tablero virtual con fichas en tiempo
 | 📜 Ficha de personaje 5e | Características, salvaciones, 18 habilidades con competencia/pericia, combate, ataques con alcance, conjuros con espacios, equipo, monedas, deidad, personalidad e historia. Modificadores, bono de competencia, CD de conjuros y percepción pasiva se calculan solos |
 | 📖 Reglamento integrado | Subclases, rasgos de clase por nivel, 170+ conjuros con alcance y espacios de conjuro por clase y nivel (SRD 5e en español): todo se elige de listas en vez de escribirse a mano |
 | 🌙 Descansos | Descanso corto (gastar dados de golpe) y largo (PG, espacios y salvaciones de muerte) con un clic |
+| ⭐ Experiencia y niveles | Los enemigos dan PX según su VD; al saquear se reparten entre el grupo y la ficha avisa cuando puedes subir de nivel, aplicando PG, rasgos nuevos y espacios de conjuro |
 | 🏰 Campañas | El máster crea la campaña y comparte un código de 6 letras; los jugadores se unen y asignan su personaje |
 | 🖋 Notas del máster | El DM deja notas en cada ficha, privadas o visibles para el jugador (protegido también por reglas de Firestore) |
 | ⚔ Iniciativa compartida | El máster inicia el combate y la iniciativa se tira sola (jugadores con su bono); todos ven el orden de turnos y rondas en tiempo real, y la ficha activa brilla en el tablero |
 | 🎲 Dados | Tirador flotante disponible en toda la app (`2d6+3`, `d20`…) con historial |
 | 🗺 Generador de mapas | Mazmorras procedurales con semilla reproducible, 6 ambientaciones ilustradas, salas numeradas y exportación a PNG |
-| ♟ Tablero virtual | Cada jugador mueve su ficha (limitada por su velocidad) y el DM controla enemigos del bestiario, todo sincronizado. Niebla de guerra por salas, combate con alcances reales, estados (envenenado, derribado…), daño/cura del máster, botín y registro de combate con borrado |
+| ♟ Tablero virtual | Cada jugador mueve su ficha (limitada por su velocidad) y el DM controla enemigos de un bestiario de 29 criaturas (VD 1/8 a 6), todo sincronizado. Niebla de guerra por salas, combate con alcances reales, estados (envenenado, derribado…), daño/cura del máster, botín con PX y registro de combate con borrado |
 
 ## Puesta en marcha
 

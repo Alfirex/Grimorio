@@ -17,9 +17,11 @@ import {
   BACKGROUNDS,
   CLASSES,
   DEITIES,
+  levelForXp,
   RACES,
   SKILLS,
   SPELL_LEVEL_LABELS,
+  xpForNextLevel,
 } from "@/data/dnd5e";
 import {
   CLASS_CONTENT,
@@ -142,6 +144,8 @@ export function CharacterSheet({ characterId }: { characterId: string }) {
           {!isOwner && <span className="badge">Solo lectura{isDM ? " · Vista de máster" : ""}</span>}
         </div>
       </div>
+
+      {isOwner && <LevelUpBanner character={character} onChange={set} />}
 
       <fieldset disabled={!isOwner} className={styles.fieldset}>
         {/* ---------- Identidad ---------- */}
@@ -302,6 +306,11 @@ export function CharacterSheet({ characterId }: { characterId: string }) {
                 value={character.xp}
                 onChange={(e) => set({ xp: clampInt(e.target.value, 0, 999999) })}
               />
+              <span className={styles.xpHint}>
+                {xpForNextLevel(character.level) !== null
+                  ? `Nivel ${character.level + 1} a los ${xpForNextLevel(character.level)} PX`
+                  : "Nivel máximo alcanzado"}
+              </span>
             </label>
             {isOwner && (
               <label>
@@ -1029,6 +1038,102 @@ function SpellsSection({
         </>
       )}
     </section>
+  );
+}
+
+/**
+ * Aviso de subida de nivel: aparece cuando los PX alcanzan el umbral del
+ * siguiente nivel y aplica la subida completa (PG, dado de golpe, rasgos
+ * nuevos y espacios de conjuro).
+ */
+function LevelUpBanner({
+  character,
+  onChange,
+}: {
+  character: Character;
+  onChange: (patch: Partial<Character>) => void;
+}) {
+  const [message, setMessage] = useState("");
+  const targetLevel = levelForXp(character.xp);
+  const eligible = character.level < 20 && targetLevel > character.level;
+
+  if (!eligible) {
+    return message ? <p className={styles.levelUpDone}>{message}</p> : null;
+  }
+
+  const die = hitDieForClass(character.characterClass);
+  const conMod = abilityModifier(character.abilities.con);
+  const avg = Math.floor(die / 2) + 1;
+  const newLevel = character.level + 1;
+  const content = CLASS_CONTENT[character.characterClass];
+  const needsSubclass =
+    content && !character.subclass && content.subclassLevel <= newLevel;
+
+  const apply = (roll: number, viaLabel: string) => {
+    const gain = Math.max(1, roll + conMod);
+    const unlocked = featuresFor(character.characterClass, character.subclass, newLevel)
+      .filter((feature) => feature.level === newLevel)
+      .filter((feature) => !character.featuresAndTraits.includes(feature.name));
+    const lines = unlocked.map(
+      (feature) => `Nv ${feature.level} — ${feature.name}: ${feature.description}`
+    );
+    const slots = spellSlotsFor(character.characterClass, character.subclass, newLevel);
+    onChange({
+      level: newLevel,
+      maxHp: character.maxHp + gain,
+      currentHp: character.currentHp + gain,
+      hitDiceTotal: Math.min(20, character.hitDiceTotal + 1),
+      ...(lines.length > 0 && {
+        featuresAndTraits: character.featuresAndTraits.trimEnd()
+          ? `${character.featuresAndTraits.trimEnd()}\n${lines.join("\n")}`
+          : lines.join("\n"),
+      }),
+      ...(slots.some((n) => n > 0) && {
+        spellSlots: slots.map((total, i) => ({
+          total,
+          used: Math.min(character.spellSlots[i]?.used ?? 0, total),
+        })),
+      }),
+    });
+    setMessage(
+      `⬆ ¡Nivel ${newLevel}! +${gain} PG (${viaLabel}${conMod !== 0 ? ` ${formatModifier(conMod)} CON` : ""})${
+        lines.length > 0
+          ? ` · ${lines.length} rasgo${lines.length !== 1 ? "s" : ""} nuevo${lines.length !== 1 ? "s" : ""} añadido${lines.length !== 1 ? "s" : ""} a la ficha`
+          : ""
+      }. Recuerda guardar.`
+    );
+  };
+
+  return (
+    <div className={styles.levelUpBanner}>
+      <span>
+        ⬆ Con {character.xp} PX puedes subir al <strong>nivel {newLevel}</strong>. Elige
+        cómo ganar los PG:
+      </span>
+      <div className={styles.levelUpActions}>
+        <button
+          type="button"
+          className="btn btn--gold btn--sm"
+          onClick={() => apply(avg, "media")}
+        >
+          Media (+{Math.max(1, avg + conMod)} PG)
+        </button>
+        <button
+          type="button"
+          className="btn btn--sm"
+          onClick={() => apply(1 + Math.floor(Math.random() * die), `d${die}`)}
+        >
+          🎲 Tirar d{die}
+        </button>
+      </div>
+      {needsSubclass && (
+        <span className={styles.levelUpNote}>
+          No olvides elegir tu {content.subclassLabel.toLowerCase()} (se escoge al nivel{" "}
+          {content.subclassLevel}).
+        </span>
+      )}
+      {message && <span className={styles.levelUpNote}>{message}</span>}
+    </div>
   );
 }
 
