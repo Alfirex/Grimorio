@@ -156,3 +156,42 @@ textarea.input {
   color: $color-blood-light;
   font-size: 0.85rem;
 }
+
+// ---------- Impresión: ficha legible en papel ----------
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: #fff !important;
+  }
+
+  main {
+    max-width: none;
+    padding: 0;
+  }
+
+  // Tinta oscura sobre papel: anula el tema oscuro sin perder retratos
+  main * {
+    background-color: transparent !important;
+    box-shadow: none !important;
+    color: #1a1408 !important;
+    text-shadow: none !important;
+  }
+
+  .btn {
+    display: none !important;
+  }
+
+  .panel,
+  .input,
+  .stat-box {
+    border-color: #999 !important;
+  }
+
+  .panel {
+    break-inside: avoid;
+  }
+}

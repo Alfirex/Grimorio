@@ -16,7 +16,7 @@ export function Navbar() {
   const pathname = usePathname();
 
   return (
-    <header className={styles.navbar}>
+    <header className={`${styles.navbar} no-print`}>
       <Link href={user ? "/dashboard" : "/"} className={styles.brand}>
         <span className={styles.brandIcon}>⚔</span> Grimorio
       </Link>

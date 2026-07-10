@@ -48,7 +48,7 @@ export function NotesPanel({ characterId, isOwner, isDM }: NotesPanelProps) {
   };
 
   return (
-    <section className="panel">
+    <section className="panel no-print">
       <h2 className="section-title">Notas del máster</h2>
 
       {isDM && (

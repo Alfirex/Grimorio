@@ -153,6 +153,14 @@ export function CharacterSheet({ characterId }: { characterId: string }) {
       <div className={styles.toolbar}>
         <h1 className={styles.pageTitle}>{character.name || "Personaje sin nombre"}</h1>
         <div className={styles.toolbarActions}>
+          <button
+            type="button"
+            className="btn btn--sm"
+            title="Imprime la ficha o guárdala como PDF desde el diálogo de impresión"
+            onClick={() => window.print()}
+          >
+            🖨 Imprimir
+          </button>
           {isOwner && (
             <>
               {dirty && <span className={styles.unsaved}>Cambios sin guardar</span>}

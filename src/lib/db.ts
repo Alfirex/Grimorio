@@ -5,6 +5,7 @@ import {
   deleteDoc,
   deleteField,
   doc,
+  getDoc,
   getDocs,
   limit,
   onSnapshot,
@@ -272,6 +273,19 @@ export async function setCampaignEncounter(
   encounter: Encounter | null
 ): Promise<void> {
   await updateDoc(doc(getDb(), "campaigns", campaignId), { encounter });
+}
+
+/**
+ * Añade una entrada al registro leyendo antes el estado actual. Para
+ * componentes sin suscripción a la campaña (p. ej. el tirador de dados).
+ */
+export async function appendBoardLogById(campaignId: string, text: string): Promise<void> {
+  const ref = doc(getDb(), "campaigns", campaignId);
+  const snapshot = await getDoc(ref);
+  if (!snapshot.exists()) return;
+  const current = (snapshot.data().boardLog ?? []) as BoardLogEntry[];
+  const entry: BoardLogEntry = { id: crypto.randomUUID(), text, timestamp: Date.now() };
+  await updateDoc(ref, { boardLog: [entry, ...current].slice(0, MAX_BOARD_LOG) });
 }
 
 /** Elimina una entrada concreta del registro de combate. */

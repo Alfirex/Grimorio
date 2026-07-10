@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { appendBoardLogById } from "@/lib/db";
 import { rollDice } from "@/utils/dice";
 import type { DiceRollResult } from "@/types";
 import styles from "./DiceRoller.module.scss";
@@ -9,10 +12,16 @@ const QUICK_DICE = ["d4", "d6", "d8", "d10", "d12", "d20", "d100"];
 const MAX_HISTORY = 20;
 
 export function DiceRoller() {
+  const { user } = useAuth();
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [expression, setExpression] = useState("1d20");
   const [error, setError] = useState("");
+  const [share, setShare] = useState(false);
   const [history, setHistory] = useState<DiceRollResult[]>([]);
+
+  // Dentro de una campaña, las tiradas pueden anunciarse a toda la mesa
+  const campaignId = pathname?.match(/^\/campaigns\/([^/]+)/)?.[1] ?? null;
 
   const roll = (expr: string) => {
     const result = rollDice(expr);
@@ -22,10 +31,21 @@ export function DiceRoller() {
     }
     setError("");
     setHistory((prev) => [result, ...prev].slice(0, MAX_HISTORY));
+    if (share && campaignId) {
+      const who = user?.displayName?.split(" ")[0] ?? "Alguien";
+      const mod =
+        result.modifier !== 0
+          ? ` ${result.modifier > 0 ? "+" : "−"} ${Math.abs(result.modifier)}`
+          : "";
+      appendBoardLogById(
+        campaignId,
+        `🎲 ${who} tira ${result.expression}: [${result.rolls.join(", ")}]${mod} = ${result.total}`
+      ).catch(() => setError("No se pudo anunciar la tirada."));
+    }
   };
 
   return (
-    <div className={styles.container}>
+    <div className={`${styles.container} no-print`}>
       {open && (
         <div className={styles.panel}>
           <h3 className={styles.title}>Tirador de dados</h3>
@@ -63,6 +83,17 @@ export function DiceRoller() {
           </form>
 
           {error && <p className="error-text">{error}</p>}
+
+          {campaignId && (
+            <label className={styles.shareRow}>
+              <input
+                type="checkbox"
+                checked={share}
+                onChange={(e) => setShare(e.target.checked)}
+              />
+              Anunciar en el registro de la campaña
+            </label>
+          )}
 
           <ul className={styles.history}>
             {history.map((entry) => (
