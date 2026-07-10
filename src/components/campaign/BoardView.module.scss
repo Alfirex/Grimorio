@@ -446,3 +446,50 @@
   gap: 0.5rem;
   justify-content: space-between;
 }
+
+.modeRow {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.savePanel {
+  border-top: 1px dashed rgba($color-border-light, 0.5);
+  display: grid;
+  gap: 0.5rem;
+  padding-top: 0.6rem;
+}
+
+.saveTitle {
+  color: $color-cream;
+  font-size: 0.85rem;
+}
+
+.saveHints {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.saveForm {
+  align-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.saveSelect {
+  width: 5.5rem;
+}
+
+.saveField {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.saveHalf {
+  align-items: center;
+  color: $color-muted;
+  display: flex;
+  font-size: 0.75rem;
+  gap: 0.3rem;
+}

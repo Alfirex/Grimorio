@@ -22,8 +22,9 @@ import {
 import { BESTIARY, type MonsterDef } from "@/data/bestiary";
 import { CONDITIONS, conditionEmoji, inferAttackRange } from "@/data/dnd5e";
 import { spellRangeFor } from "@/data/srd";
+import { formatModifier, savingThrowBonus } from "@/utils/character";
 import { sortedCombatants } from "./InitiativeTracker";
-import type { Attack, BoardToken, Campaign, Character } from "@/types";
+import type { AbilityKey, Attack, BoardToken, Campaign, Character } from "@/types";
 import styles from "./BoardView.module.scss";
 
 const CELL = 32;
@@ -674,6 +675,7 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
               attacker={attacker}
               target={target}
               attackerCharacter={characterOf(attacker)}
+              targetCharacter={characterOf(target)}
               targetStats={statsOf(target)}
               onLog={appendLog}
               onResolve={async (text, damage) => {
@@ -799,10 +801,31 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
 
 // ---------- Panel de ataque ----------
 
+const SAVE_LABELS: Record<AbilityKey, string> = {
+  str: "FUE",
+  dex: "DES",
+  con: "CON",
+  int: "INT",
+  wis: "SAB",
+  cha: "CAR",
+};
+
+const SAVE_KEYS: Record<string, AbilityKey> = {
+  FUE: "str",
+  DES: "dex",
+  CON: "con",
+  INT: "int",
+  SAB: "wis",
+  CAR: "cha",
+};
+
+type RollMode = "normal" | "adv" | "dis";
+
 interface AttackPanelProps {
   attacker: BoardToken;
   target: BoardToken;
   attackerCharacter: Character | undefined;
+  targetCharacter: Character | undefined;
   targetStats: { hp: number; maxHp: number; ac: number };
   onResolve: (logText: string, damage: number) => Promise<void>;
   /** Anota en el registro sin cerrar el panel (tiradas de habilidades). */
@@ -814,6 +837,7 @@ function AttackPanel({
   attacker,
   target,
   attackerCharacter,
+  targetCharacter,
   targetStats,
   onResolve,
   onLog,
@@ -822,6 +846,11 @@ function AttackPanel({
   const [customBonus, setCustomBonus] = useState("4");
   const [customDamage, setCustomDamage] = useState("1d6+2");
   const [customRange, setCustomRange] = useState(String(FEET_PER_CELL));
+  const [mode, setMode] = useState<RollMode>("normal");
+  const [saveAbility, setSaveAbility] = useState<AbilityKey>("dex");
+  const [saveDc, setSaveDc] = useState("12");
+  const [saveDamage, setSaveDamage] = useState("");
+  const [halfOnSave, setHalfOnSave] = useState(true);
   const [busy, setBusy] = useState(false);
 
   const distance = Math.max(Math.abs(attacker.x - target.x), Math.abs(attacker.y - target.y));
@@ -861,7 +890,10 @@ function AttackPanel({
       const bonus = parseInt(bonusText.replace(/\s/g, ""), 10) || 0;
       // Convención del bestiario: bono ≥ 90 = impacta siempre (p. ej. Proyectil mágico)
       const autoHit = bonus >= 90;
-      const d20 = 1 + Math.floor(Math.random() * 20);
+      const roll1 = 1 + Math.floor(Math.random() * 20);
+      const roll2 = 1 + Math.floor(Math.random() * 20);
+      const d20 =
+        mode === "adv" ? Math.max(roll1, roll2) : mode === "dis" ? Math.min(roll1, roll2) : roll1;
       const total = d20 + bonus;
       const crit = !autoHit && d20 === 20;
       const fumble = !autoHit && d20 === 1;
@@ -876,9 +908,15 @@ function AttackPanel({
         damageDetail = ` → ${damage} de daño (${damageExpr}${crit ? " ×2 ¡CRÍTICO!" : ""})`;
       }
 
+      const modeDetail =
+        mode === "adv"
+          ? ` con ventaja [${roll1}, ${roll2}]`
+          : mode === "dis"
+            ? ` con desventaja [${roll1}, ${roll2}]`
+            : "";
       const text = autoHit
         ? `⚔ ${attacker.name} lanza ${name} contra ${target.name}: impacto automático${damageDetail}`
-        : `⚔ ${attacker.name} ataca a ${target.name} con ${name}: 🎲${d20}${
+        : `⚔ ${attacker.name} ataca a ${target.name} con ${name}${modeDetail}: 🎲${d20}${
             bonus ? `${bonus >= 0 ? "+" : ""}${bonus}` : ""
           } = ${total} vs CA ${targetStats.ac} · ${
             hit ? "IMPACTO" : fumble ? "PIFIA" : "fallo"
@@ -889,6 +927,62 @@ function AttackPanel({
       setBusy(false);
     }
   };
+
+  /**
+   * El atacante fuerza una salvación al objetivo (Bola de fuego, veneno…).
+   * Los personajes tiran con su bono real; los monstruos, un d20.
+   */
+  const executeSave = async () => {
+    setBusy(true);
+    try {
+      const dc = Math.max(1, parseInt(saveDc, 10) || 10);
+      const bonus = targetCharacter ? savingThrowBonus(targetCharacter, saveAbility) : 0;
+      const d20 = 1 + Math.floor(Math.random() * 20);
+      const total = d20 + bonus;
+      const success = total >= dc;
+
+      let damage = 0;
+      let detail = "";
+      const expr = saveDamage.trim();
+      if (expr) {
+        const rolled = rollDice(expr);
+        const base = rolled ? rolled.total : Math.max(0, parseInt(expr, 10) || 0);
+        damage = success ? (halfOnSave ? Math.floor(base / 2) : 0) : base;
+        detail =
+          damage > 0
+            ? ` → ${damage} de daño (${expr}${success && halfOnSave ? ", mitad" : ""})`
+            : ` → sin daño`;
+      }
+
+      const text = `🛡 ${attacker.name} fuerza una salvación de ${SAVE_LABELS[saveAbility]} CD ${dc} a ${target.name}: 🎲${d20}${
+        bonus ? formatModifier(bonus) : ""
+      } = ${total} · ${success ? "SUPERA" : "falla"}${detail}`;
+      await onResolve(text, damage);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // CD mencionadas en ataques y habilidades ("CON CD 11 mitad"), para rellenar de un clic
+  const saveHints: Array<{ ability: AbilityKey; dc: number; damage?: string }> = [];
+  {
+    const seen = new Set<string>();
+    const sources = [
+      ...attacks.map((attack) => `${attack.type} ${attack.damage}`),
+      ...abilities,
+    ];
+    for (const text of sources) {
+      const match = text.match(/\b(FUE|DES|CON|INT|SAB|CAR)\s*CD\s*(\d+)/i);
+      if (!match) continue;
+      const ability = SAVE_KEYS[match[1].toUpperCase()];
+      const dc = parseInt(match[2], 10);
+      const key = `${ability}-${dc}`;
+      if (!ability || seen.has(key)) continue;
+      seen.add(key);
+      const dice = text.match(/\d{0,3}d\d{1,4}(?:\s*[+-]\s*\d{1,4})?/i)?.[0];
+      saveHints.push({ ability, dc, damage: dice });
+    }
+  }
 
   return (
     <div className={styles.attackPanel}>
@@ -913,6 +1007,26 @@ function AttackPanel({
         <button type="button" className="btn btn--sm" onClick={onCancel}>
           Cancelar
         </button>
+      </div>
+
+      <div className={styles.modeRow}>
+        {(
+          [
+            ["dis", "Desventaja"],
+            ["normal", "Normal"],
+            ["adv", "Ventaja"],
+          ] as const
+        ).map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            className={`${styles.conditionChip} ${mode === value ? styles.conditionOn : ""}`}
+            onClick={() => setMode(value)}
+          >
+            {value === "adv" ? "▲ " : value === "dis" ? "▼ " : ""}
+            {label}
+          </button>
+        ))}
       </div>
 
       {abilities.length > 0 && (
@@ -1026,6 +1140,83 @@ function AttackPanel({
           </button>
         </form>
       )}
+
+      <div className={styles.savePanel}>
+        <span className={styles.saveTitle}>
+          🛡 Forzar salvación a {target.name}
+          {targetCharacter && (
+            <em className={styles.attackMeta}>
+              {" "}
+              (tira con su bono: {SAVE_LABELS[saveAbility]}{" "}
+              {formatModifier(savingThrowBonus(targetCharacter, saveAbility))})
+            </em>
+          )}
+        </span>
+        {saveHints.length > 0 && (
+          <div className={styles.saveHints}>
+            {saveHints.map((hint) => (
+              <button
+                key={`${hint.ability}-${hint.dc}`}
+                type="button"
+                className={styles.conditionChip}
+                title="Rellenar con la CD de este ataque"
+                onClick={() => {
+                  setSaveAbility(hint.ability);
+                  setSaveDc(String(hint.dc));
+                  if (hint.damage) setSaveDamage(hint.damage);
+                }}
+              >
+                {SAVE_LABELS[hint.ability]} CD {hint.dc}
+                {hint.damage ? ` · ${hint.damage}` : ""}
+              </button>
+            ))}
+          </div>
+        )}
+        <div className={styles.saveForm}>
+          <select
+            className={`input ${styles.saveSelect}`}
+            title="Característica de la salvación"
+            value={saveAbility}
+            onChange={(e) => setSaveAbility(e.target.value as AbilityKey)}
+          >
+            {(Object.keys(SAVE_LABELS) as AbilityKey[]).map((key) => (
+              <option key={key} value={key}>
+                {SAVE_LABELS[key]}
+              </option>
+            ))}
+          </select>
+          <label className={styles.saveField}>
+            <span className="field-label">CD</span>
+            <input
+              className={`input ${styles.statInput}`}
+              type="number"
+              min={1}
+              value={saveDc}
+              onChange={(e) => setSaveDc(e.target.value)}
+            />
+          </label>
+          <label className={styles.saveField}>
+            <span className="field-label">Daño</span>
+            <input
+              className={`input ${styles.statInput}`}
+              placeholder="8d6"
+              value={saveDamage}
+              onChange={(e) => setSaveDamage(e.target.value)}
+            />
+          </label>
+          <label className={styles.saveHalf} title="Si supera la salvación recibe la mitad del daño; si no, nada">
+            <input
+              type="checkbox"
+              checked={halfOnSave}
+              onChange={(e) => setHalfOnSave(e.target.checked)}
+            />
+            mitad si supera
+          </label>
+          <button type="button" className="btn btn--sm" disabled={busy} onClick={executeSave}>
+            🎲 Salvación
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
