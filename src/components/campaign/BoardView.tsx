@@ -714,10 +714,16 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
                 value={creature}
                 onChange={(e) => setCreature(e.target.value)}
               >
-                {BESTIARY.map((monster, i) => (
-                  <option key={monster.name} value={i}>
-                    {monster.name} · VD {monster.cr} · {monster.hp} PG · CA {monster.ac}
-                  </option>
+                {[...new Set(BESTIARY.map((monster) => monster.cr))].map((cr) => (
+                  <optgroup key={cr} label={`VD ${cr}`}>
+                    {BESTIARY.map((monster, i) =>
+                      monster.cr === cr ? (
+                        <option key={monster.name} value={i}>
+                          {monster.name} · {monster.hp} PG · CA {monster.ac}
+                        </option>
+                      ) : null
+                    )}
+                  </optgroup>
                 ))}
                 <option value="custom">Personalizado…</option>
               </select>

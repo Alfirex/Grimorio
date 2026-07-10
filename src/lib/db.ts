@@ -22,6 +22,7 @@ import type {
   Character,
   CharacterNote,
   Encounter,
+  Handout,
   JournalEntry,
   NoteVisibility,
 } from "@/types";
@@ -310,6 +311,54 @@ export async function setCampaignDoors(
   openDoors: string[]
 ): Promise<void> {
   await updateDoc(doc(getDb(), "campaigns", campaignId), { openDoors });
+}
+
+// ---------- Handouts (subcolección de la campaña) ----------
+
+/**
+ * Handouts de la campaña. El máster los ve todos; los jugadores solo los
+ * revelados (la consulta filtra por `revealed` para cumplir las reglas).
+ */
+export function subscribeHandouts(
+  campaignId: string,
+  isDM: boolean,
+  callback: (handouts: Handout[]) => void
+): Unsubscribe {
+  const ref = collection(getDb(), "campaigns", campaignId, "handouts");
+  const q = isDM ? query(ref) : query(ref, where("revealed", "==", true));
+  return onSnapshot(q, (snapshot) => {
+    const handouts = snapshot.docs
+      .map((d) => ({ id: d.id, ...d.data() }) as Handout)
+      .sort((a, b) => b.createdAt - a.createdAt);
+    callback(handouts);
+  });
+}
+
+export async function addHandout(
+  campaignId: string,
+  title: string,
+  image: string
+): Promise<void> {
+  await addDoc(collection(getDb(), "campaigns", campaignId, "handouts"), {
+    title,
+    image,
+    revealed: false,
+    createdAt: Date.now(),
+  });
+}
+
+export async function setHandoutRevealed(
+  campaignId: string,
+  handoutId: string,
+  revealed: boolean
+): Promise<void> {
+  await updateDoc(doc(getDb(), "campaigns", campaignId, "handouts", handoutId), {
+    revealed,
+  });
+}
+
+export async function deleteHandout(campaignId: string, handoutId: string): Promise<void> {
+  await deleteDoc(doc(getDb(), "campaigns", campaignId, "handouts", handoutId));
 }
 
 /** Añade una entrada al diario de campaña (solo el máster). */

@@ -8,7 +8,8 @@ import { RequireAuth } from "@/components/auth/RequireAuth";
 import { deleteCampaign, subscribeCampaign, subscribeCampaignCharacters } from "@/lib/db";
 import { BoardView } from "@/components/campaign/BoardView";
 import { CampaignJournal } from "@/components/campaign/CampaignJournal";
-import { InitiativeTracker } from "@/components/campaign/InitiativeTracker";
+import { HandoutsPanel } from "@/components/campaign/HandoutsPanel";
+import { InitiativeTracker, sortedCombatants } from "@/components/campaign/InitiativeTracker";
 import { passivePerception } from "@/utils/character";
 import type { Campaign, Character } from "@/types";
 import styles from "./page.module.scss";
@@ -44,6 +45,16 @@ function CampaignView({ campaignId }: { campaignId: string }) {
   if (!user) return null;
 
   const isDM = campaign.dmUid === user.uid;
+
+  // Combatiente activo del encuentro; avisa cuando le toca a un personaje tuyo
+  const activeCombatant = campaign.encounter
+    ? sortedCombatants(campaign.encounter)[campaign.encounter.turnIndex]
+    : null;
+  const myTurnCharacter = activeCombatant
+    ? characters.find(
+        (c) => c.id === activeCombatant.id && c.ownerUid === user.uid
+      )
+    : null;
 
   const handleCopyCode = async () => {
     await navigator.clipboard.writeText(campaign.inviteCode);
@@ -88,6 +99,13 @@ function CampaignView({ campaignId }: { campaignId: string }) {
         </p>
       )}
 
+      {myTurnCharacter && (
+        <p className={styles.yourTurn}>
+          ⚔ ¡Es tu turno, <strong>{myTurnCharacter.name || "héroe"}</strong>! (ronda{" "}
+          {campaign.encounter?.round})
+        </p>
+      )}
+
       <BoardView campaign={campaign} characters={characters} isDM={isDM} />
 
       <div className={styles.columns}>
@@ -128,6 +146,8 @@ function CampaignView({ campaignId }: { campaignId: string }) {
           <InitiativeTracker campaign={campaign} characters={characters} isDM={isDM} />
         </section>
       </div>
+
+      <HandoutsPanel campaignId={campaign.id} isDM={isDM} />
 
       <CampaignJournal campaign={campaign} isDM={isDM} />
     </div>

@@ -1,0 +1,117 @@
+@use "../../styles/variables" as *;
+@use "../../styles/mixins" as *;
+
+.heading {
+  color: $color-gold;
+  font-size: 1.05rem;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.9rem;
+  text-transform: uppercase;
+}
+
+.uploadRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+
+  input[type="text"],
+  .input {
+    flex: 1;
+    min-width: 12rem;
+  }
+}
+
+.hint {
+  color: $color-muted;
+  font-size: 0.75rem;
+  font-style: italic;
+  margin-bottom: 0.6rem;
+}
+
+.empty {
+  color: $color-muted;
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.gallery {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+
+.card {
+  margin: 0;
+}
+
+.thumb {
+  aspect-ratio: 4 / 3;
+  border: 1px solid $color-border;
+  border-radius: 6px;
+  cursor: zoom-in;
+  display: block;
+  object-fit: cover;
+  transition: border-color 0.15s ease, filter 0.15s ease;
+  width: 100%;
+
+  &:hover {
+    border-color: $color-gold;
+  }
+}
+
+// Solo lo ve el máster: aún oculto para los jugadores
+.thumbHidden {
+  filter: grayscale(0.7) brightness(0.6);
+}
+
+.caption {
+  align-items: center;
+  display: flex;
+  gap: 0.4rem;
+  justify-content: space-between;
+  margin-top: 0.3rem;
+}
+
+.title {
+  color: $color-cream;
+  font-size: 0.8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 0.25rem;
+}
+
+.lightbox {
+  align-items: center;
+  background: rgba(0, 0, 0, 0.85);
+  cursor: zoom-out;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  inset: 0;
+  justify-content: center;
+  padding: 2rem;
+  position: fixed;
+  z-index: 50;
+}
+
+.lightboxImg {
+  border: 2px solid $color-border-light;
+  border-radius: 8px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.8);
+  max-height: 85vh;
+  max-width: 92vw;
+  object-fit: contain;
+}
+
+.lightboxTitle {
+  color: $color-cream;
+  font-family: $font-display;
+  font-size: 0.9rem;
+}

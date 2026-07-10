@@ -175,6 +175,17 @@ export interface JournalEntry {
   timestamp: number;
 }
 
+/** Documento que el máster enseña a los jugadores: retratos, cartas, mapas… */
+export interface Handout {
+  id: string;
+  title: string;
+  /** Imagen comprimida como data-URL JPEG. */
+  image: string;
+  /** Solo los handouts revelados son visibles (y legibles) para los jugadores. */
+  revealed: boolean;
+  createdAt: number;
+}
+
 export interface Campaign {
   id: string;
   name: string;
