@@ -22,6 +22,7 @@ import type {
   Character,
   CharacterNote,
   Encounter,
+  EncounterPreset,
   Handout,
   JournalEntry,
   NoteVisibility,
@@ -303,6 +304,19 @@ export async function removeBoardLogEntry(
 /** Vacía el registro de combate por completo. */
 export async function clearBoardLog(campaignId: string): Promise<void> {
   await updateDoc(doc(getDb(), "campaigns", campaignId), { boardLog: [] });
+}
+
+/** Guarda los presets de encuentro del máster. */
+export async function setCampaignPresets(
+  campaignId: string,
+  presets: EncounterPreset[]
+): Promise<void> {
+  await updateDoc(doc(getDb(), "campaigns", campaignId), { presets });
+}
+
+/** Cambia la ambientación visual del tablero sin tocar fichas ni mapa. */
+export async function setBoardTheme(campaignId: string, theme: string): Promise<void> {
+  await updateDoc(doc(getDb(), "campaigns", campaignId), { "board.theme": theme });
 }
 
 /** Actualiza el conjunto de puertas abiertas del tablero. */

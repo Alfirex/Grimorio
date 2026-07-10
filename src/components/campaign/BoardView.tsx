@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { generateDungeon, type DungeonMap } from "@/utils/mapgen";
-import { renderDungeon } from "@/utils/renderDungeon";
+import { DEFAULT_THEME, renderDungeon, THEMES } from "@/utils/renderDungeon";
 import { rollDice } from "@/utils/dice";
 import {
   appendBoardLog,
@@ -14,9 +14,11 @@ import {
   removeBoardLogEntry,
   removeBoardToken,
   revealBoardRoom,
+  setBoardTheme,
   setBoardTokenConditions,
   setBoardTokenHp,
   setCampaignDoors,
+  setCampaignPresets,
   updateCharacter,
   upsertBoardToken,
 } from "@/lib/db";
@@ -25,7 +27,14 @@ import { CONDITIONS, conditionEmoji, inferAttackRange } from "@/data/dnd5e";
 import { spellRangeFor } from "@/data/srd";
 import { formatModifier, savingThrowBonus } from "@/utils/character";
 import { sortedCombatants } from "./InitiativeTracker";
-import type { AbilityKey, Attack, BoardToken, Campaign, Character } from "@/types";
+import type {
+  AbilityKey,
+  Attack,
+  BoardToken,
+  Campaign,
+  Character,
+  PresetEnemy,
+} from "@/types";
 import styles from "./BoardView.module.scss";
 
 const CELL = 32;
@@ -44,6 +53,8 @@ const PLAYER_COLORS = [
   "#4a6b8b",
 ];
 const ENEMY_COLOR = "#b43a3a";
+
+const rollD20 = () => 1 + Math.floor(Math.random() * 20);
 
 interface BoardViewProps {
   campaign: Campaign;
@@ -70,12 +81,17 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
   const [hoverCell, setHoverCell] = useState<string | null>(null); // "x,y" bajo el cursor
   const [aoeShape, setAoeShape] = useState<"none" | "sphere" | "cube" | "cone" | "line">("none");
   const [aoeSize, setAoeSize] = useState("20"); // pies
+  const [aoeSaveAbility, setAoeSaveAbility] = useState<AbilityKey>("dex");
+  const [aoeDc, setAoeDc] = useState("15");
+  const [aoeDamage, setAoeDamage] = useState("8d6");
+  const [aoeHalf, setAoeHalf] = useState(true);
   const [enemyName, setEnemyName] = useState("");
   const [enemyHp, setEnemyHp] = useState("7");
   const [enemyAc, setEnemyAc] = useState("13");
   const [enemySpeed, setEnemySpeed] = useState("30");
   const [enemyXp, setEnemyXp] = useState("25");
   const [enemyRoom, setEnemyRoom] = useState("0");
+  const [presetPick, setPresetPick] = useState("");
   const [zoom, setZoom] = useState(1);
 
   const board = campaign.board ?? null;
@@ -230,6 +246,45 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
   }, [map, reachable]);
 
   const appendLog = (text: string) => appendBoardLog(campaign.id, log, text);
+
+  // Teclado: Escape lo cierra todo; las flechas mueven la ficha seleccionada
+  // casilla a casilla (respetando muros, puertas cerradas y fichas)
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target && ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)) return;
+      if (e.key === "Escape") {
+        setSelectedId(null);
+        setCombat(null);
+        setAoeShape("none");
+        return;
+      }
+      const deltas: Record<string, [number, number]> = {
+        ArrowUp: [0, -1],
+        ArrowDown: [0, 1],
+        ArrowLeft: [-1, 0],
+        ArrowRight: [1, 0],
+      };
+      const delta = deltas[e.key];
+      if (!delta || !selectedToken || !map || !canMove(selectedToken)) return;
+      e.preventDefault();
+      const nx = selectedToken.x + delta[0];
+      const ny = selectedToken.y + delta[1];
+      if (nx < 0 || ny < 0 || nx >= map.width || ny >= map.height) return;
+      if (map.grid[ny][nx] === "wall" || isClosedDoor(nx, ny)) return;
+      if (tokenList.some((t) => t.x === nx && t.y === ny)) return;
+      moveBoardToken(campaign.id, selectedToken.id, nx, ny);
+      if (selectedToken.characterId) {
+        const room = roomIndexAt(nx, ny);
+        if (room >= 0 && !revealed.has(room)) {
+          revealBoardRoom(campaign.id, room);
+          appendLog(`🕯 ${selectedToken.name} descubre la sala ${room + 1}.`);
+        }
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  });
 
   /** Abre o cierra una puerta y lo anota; devuelve true si la gestionó. */
   const handleDoorClick = async (x: number, y: number): Promise<boolean> => {
@@ -508,6 +563,108 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
     setCombat(null);
   };
 
+  const presets = campaign.presets ?? [];
+
+  /** Guarda los enemigos del tablero como grupo reutilizable. */
+  const handleSavePreset = async () => {
+    const enemies = tokenList.filter((token) => token.characterId === null);
+    if (enemies.length === 0) {
+      setNotice("No hay enemigos en el tablero que guardar.");
+      return;
+    }
+    const name = window.prompt(
+      `¿Nombre para este grupo de ${enemies.length} enemigos?`,
+      "Emboscada"
+    );
+    if (!name?.trim()) return;
+    const snapshot: PresetEnemy[] = enemies.map((token) => ({
+      name: token.name.replace(/\s\d+$/, ""),
+      hp: token.maxHp ?? token.hp ?? 1,
+      maxHp: token.maxHp ?? token.hp ?? 1,
+      ac: token.ac ?? 10,
+      speed: token.speed ?? 30,
+      ...(token.attacks && { attacks: token.attacks }),
+      ...(token.abilities && { abilities: token.abilities }),
+      ...(token.loot && { loot: token.loot }),
+      ...(token.xp !== undefined && { xp: token.xp }),
+      ...(token.image && { image: token.image }),
+    }));
+    await setCampaignPresets(campaign.id, [
+      ...presets,
+      { id: crypto.randomUUID(), name: name.trim(), enemies: snapshot },
+    ]);
+  };
+
+  /** Despliega un preset en la sala elegida, con PG frescos y numeración. */
+  const handleDeployPreset = async () => {
+    const preset = presets.find((p) => p.id === presetPick);
+    if (!preset || !guardTokenLimit(preset.enemies.length)) return;
+    const roomIndex = parseInt(enemyRoom, 10);
+    const cells = findFreeCells(
+      preset.enemies.length,
+      tokenList,
+      Number.isNaN(roomIndex) ? undefined : roomIndex
+    );
+    if (cells.length < preset.enemies.length) {
+      setNotice("No hay sitio libre suficiente en esa sala.");
+      return;
+    }
+    // Numeración local: dos goblins del mismo preset no deben repetir nombre
+    const extraCounts = new Map<string, number>();
+    const numbered = (base: string): string => {
+      const existing =
+        tokenList.filter((t) => t.name === base || t.name.startsWith(`${base} `)).length +
+        (extraCounts.get(base) ?? 0);
+      extraCounts.set(base, (extraCounts.get(base) ?? 0) + 1);
+      return existing === 0 ? base : `${base} ${existing + 1}`;
+    };
+    preset.enemies.forEach((enemy, i) => {
+      upsertBoardToken(campaign.id, {
+        ...enemy,
+        id: crypto.randomUUID(),
+        characterId: null,
+        color: ENEMY_COLOR,
+        name: numbered(enemy.name),
+        hp: enemy.maxHp,
+        x: cells[i].x,
+        y: cells[i].y,
+      });
+    });
+    await appendLog(`⚠ Aparece «${preset.name}» (${preset.enemies.length} enemigos).`);
+  };
+
+  const handleDeletePreset = () => {
+    if (!presetPick) return;
+    setCampaignPresets(
+      campaign.id,
+      presets.filter((p) => p.id !== presetPick)
+    );
+    setPresetPick("");
+  };
+
+  /** Teletransporta a todos los personajes a la sala elegida (cambio de escena). */
+  const handleGatherPlayers = async () => {
+    const playerTokens = tokenList.filter((token) => token.characterId);
+    if (playerTokens.length === 0) return;
+    const roomIndex = parseInt(enemyRoom, 10);
+    const cells = findFreeCells(
+      playerTokens.length,
+      tokenList,
+      Number.isNaN(roomIndex) ? undefined : roomIndex
+    );
+    if (cells.length < playerTokens.length) {
+      setNotice("No hay sitio libre suficiente en esa sala.");
+      return;
+    }
+    for (let i = 0; i < playerTokens.length; i++) {
+      await moveBoardToken(campaign.id, playerTokens[i].id, cells[i].x, cells[i].y);
+    }
+    if (!Number.isNaN(roomIndex) && !revealed.has(roomIndex)) {
+      await revealBoardRoom(campaign.id, roomIndex);
+    }
+    await appendLog(`📍 El grupo se reagrupa en la sala ${roomIndex + 1}.`);
+  };
+
   /** Clona el enemigo seleccionado con PG frescos en una casilla libre de su sala. */
   const handleDuplicateSelected = () => {
     if (!selectedToken || selectedToken.characterId !== null || !guardTokenLimit(1)) return;
@@ -642,6 +799,44 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
     cube: "cubo",
     cone: "cono",
     line: "línea",
+  };
+
+  /**
+   * Resuelve la plantilla: una tirada de daño para todos y una salvación por
+   * afectado (los personajes con su bono real). Todo en una entrada del registro.
+   */
+  const resolveAoe = async () => {
+    if (!aoeCells || aoeAffected.length === 0) return;
+    const dc = Math.max(1, parseInt(aoeDc, 10) || 10);
+    const rolled = rollDice(aoeDamage.trim());
+    const base = rolled ? rolled.total : Math.max(0, parseInt(aoeDamage, 10) || 0);
+    const parts: string[] = [];
+    for (const token of aoeAffected) {
+      const character = characterOf(token);
+      const bonus = character ? savingThrowBonus(character, aoeSaveAbility) : 0;
+      const total = rollD20() + bonus;
+      const success = total >= dc;
+      const damage = success ? (aoeHalf ? Math.floor(base / 2) : 0) : base;
+      const stats = statsOf(token);
+      const newHp = Math.max(0, stats.hp - damage);
+      let note = "";
+      if (damage > 0) {
+        try {
+          if (character) await updateCharacter(character.id, { currentHp: newHp });
+          else await setBoardTokenHp(campaign.id, token.id, newHp);
+          if (newHp === 0 && stats.hp > 0) note = character ? " 😵" : " ☠";
+        } catch {
+          note = " (aplicar a mano)";
+        }
+      }
+      parts.push(
+        `${token.name} 🎲${total} ${success ? "supera" : "falla"} → ${damage}${note}`
+      );
+    }
+    await appendLog(
+      `🔥 Área de ${selectedToken?.name ?? "el máster"} (${SAVE_LABELS[aoeSaveAbility]} CD ${dc}, ${aoeDamage} = ${base}${aoeHalf ? ", mitad al superar" : ""}): ${parts.join(" · ")}`
+    );
+    setAoeShape("none");
   };
 
   const doorCells = useMemo(() => {
@@ -822,6 +1017,74 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
         )}
       </div>
 
+      {isDM && board && map && (
+        <div className={styles.dmRow}>
+          <span className={styles.aoeLabel}>Encuentros:</span>
+          <select
+            className={`input ${styles.presetSelect}`}
+            title="Grupos de enemigos guardados"
+            value={presetPick}
+            onChange={(e) => setPresetPick(e.target.value)}
+          >
+            <option value="">— Grupo guardado —</option>
+            {presets.map((preset) => (
+              <option key={preset.id} value={preset.id}>
+                {preset.name} ({preset.enemies.length})
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            className="btn btn--sm"
+            disabled={!presetPick}
+            title="Despliega el grupo en la sala elegida en el selector de enemigos"
+            onClick={handleDeployPreset}
+          >
+            📦 Desplegar
+          </button>
+          <button
+            type="button"
+            className="btn btn--sm"
+            title="Guarda los enemigos actuales del tablero como grupo reutilizable"
+            onClick={handleSavePreset}
+          >
+            💾 Guardar grupo
+          </button>
+          {presetPick && (
+            <button
+              type="button"
+              className="btn btn--danger btn--sm"
+              title="Eliminar el grupo guardado"
+              onClick={handleDeletePreset}
+            >
+              ✕
+            </button>
+          )}
+          <button
+            type="button"
+            className="btn btn--sm"
+            title="Teletransporta a todos los personajes a la sala elegida (cambio de escena)"
+            onClick={handleGatherPlayers}
+          >
+            📍 Reunir PJs
+          </button>
+          <label className={styles.themePicker}>
+            <span className={styles.aoeLabel}>Ambientación</span>
+            <select
+              className="input"
+              value={board.theme && THEMES[board.theme] ? board.theme : DEFAULT_THEME}
+              onChange={(e) => setBoardTheme(campaign.id, e.target.value)}
+            >
+              {Object.entries(THEMES).map(([id, def]) => (
+                <option key={id} value={id}>
+                  {def.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      )}
+
       {isDM && board && map && creature !== "custom" && BESTIARY[parseInt(creature, 10)] && (
         <MonsterCard
           key={creature}
@@ -900,6 +1163,56 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
                       : "Mueve el cursor sobre el mapa."}
                 </span>
               </>
+            )}
+            {aoeShape !== "none" && aoeAffected.length > 0 && (
+              <span className={styles.aoeResolve}>
+                <select
+                  className={`input ${styles.saveSelect}`}
+                  title="Característica de la salvación"
+                  value={aoeSaveAbility}
+                  onChange={(e) => setAoeSaveAbility(e.target.value as AbilityKey)}
+                >
+                  {(Object.keys(SAVE_LABELS) as AbilityKey[]).map((key) => (
+                    <option key={key} value={key}>
+                      {SAVE_LABELS[key]}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  className={`input ${styles.statInput}`}
+                  type="number"
+                  min={1}
+                  title="CD de la salvación"
+                  value={aoeDc}
+                  onChange={(e) => setAoeDc(e.target.value)}
+                />
+                <input
+                  className={`input ${styles.statInput}`}
+                  placeholder="8d6"
+                  title="Daño del área"
+                  value={aoeDamage}
+                  onChange={(e) => setAoeDamage(e.target.value)}
+                />
+                <label
+                  className={styles.saveHalf}
+                  title="Mitad de daño al superar la salvación"
+                >
+                  <input
+                    type="checkbox"
+                    checked={aoeHalf}
+                    onChange={(e) => setAoeHalf(e.target.checked)}
+                  />
+                  mitad
+                </label>
+                <button
+                  type="button"
+                  className="btn btn--gold btn--sm"
+                  title="Tira la salvación de cada afectado, aplica el daño y lo anota"
+                  onClick={resolveAoe}
+                >
+                  💥 Resolver ({aoeAffected.length})
+                </button>
+              </span>
             )}
             <span className={styles.zoomGroup}>
               <button

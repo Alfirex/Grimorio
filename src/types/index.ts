@@ -175,6 +175,27 @@ export interface JournalEntry {
   timestamp: number;
 }
 
+/** Enemigo guardado en un preset de encuentro (sin posición ni id). */
+export interface PresetEnemy {
+  name: string;
+  hp: number;
+  maxHp: number;
+  ac: number;
+  speed: number;
+  attacks?: Attack[];
+  abilities?: string[];
+  loot?: string;
+  xp?: number;
+  image?: string;
+}
+
+/** Grupo de enemigos reutilizable que el máster despliega en una sala. */
+export interface EncounterPreset {
+  id: string;
+  name: string;
+  enemies: PresetEnemy[];
+}
+
 /** Documento que el máster enseña a los jugadores: retratos, cartas, mapas… */
 export interface Handout {
   id: string;
@@ -206,6 +227,8 @@ export interface Campaign {
   openDoors?: string[];
   /** Diario de campaña: crónica de sesiones visible para todos. */
   journal?: JournalEntry[];
+  /** Presets de encuentro del máster: grupos de enemigos listos para desplegar. */
+  presets?: EncounterPreset[];
 }
 
 export interface Combatant {

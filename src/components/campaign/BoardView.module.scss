@@ -133,6 +133,29 @@
   white-space: nowrap;
 }
 
+.dmRow {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+
+.presetSelect {
+  width: 12rem;
+}
+
+.themePicker {
+  align-items: center;
+  display: flex;
+  gap: 0.35rem;
+  margin-left: auto;
+
+  select {
+    width: auto;
+  }
+}
+
 .aoeBar {
   align-items: center;
   display: flex;
@@ -151,6 +174,13 @@
   color: $color-gold-light;
   font-size: 0.78rem;
   font-style: italic;
+}
+
+.aoeResolve {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
 }
 
 .zoomGroup {
