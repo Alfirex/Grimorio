@@ -59,6 +59,7 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
   const { user } = useAuth();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLCanvasElement>(null);
+  const aoeRef = useRef<HTMLCanvasElement>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [combat, setCombat] = useState<CombatState | null>(null);
   const [notice, setNotice] = useState("");
@@ -66,6 +67,8 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
   const [creature, setCreature] = useState("0"); // índice del bestiario o "custom"
   const [hpDelta, setHpDelta] = useState("5");
   const [hoverCell, setHoverCell] = useState<string | null>(null); // "x,y" bajo el cursor
+  const [aoeShape, setAoeShape] = useState<"none" | "sphere" | "cube" | "cone" | "line">("none");
+  const [aoeSize, setAoeSize] = useState("20"); // pies
   const [enemyName, setEnemyName] = useState("");
   const [enemyHp, setEnemyHp] = useState("7");
   const [enemyAc, setEnemyAc] = useState("13");
@@ -223,6 +226,19 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
     const x = Math.floor((e.clientX - rect.left) / CELL);
     const y = Math.floor((e.clientY - rect.top) / CELL);
     if (x < 0 || y < 0 || x >= map.width || y >= map.height) return;
+
+    // Con una plantilla activa, el clic anuncia el área en vez de mover
+    if (aoeShape !== "none") {
+      if (!aoeCells) return;
+      const names = aoeAffected.map((token) => token.name);
+      const sizeFeet = Math.max(FEET_PER_CELL, parseInt(aoeSize, 10) || FEET_PER_CELL);
+      await appendLog(
+        `🔥 ${selectedToken?.name ?? "El máster"} marca ${AOE_LABELS[aoeShape]} de ${sizeFeet} pies: ${
+          names.length > 0 ? `afecta a ${names.join(", ")}` : "no alcanza a nadie"
+        }.`
+      );
+      return;
+    }
 
     setNotice("");
     const clicked = visibleTokens.find((t) => t.x === x && t.y === y);
@@ -489,6 +505,98 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
   const attacker = combat ? (tokens[combat.attackerId] ?? null) : null;
   const target = combat ? (tokens[combat.targetId] ?? null) : null;
 
+  /**
+   * Casillas cubiertas por la plantilla de área actual. Esferas y cubos se
+   * centran en el cursor; conos y líneas parten de la ficha seleccionada
+   * apuntando hacia el cursor.
+   */
+  const computeAoeCells = (): Set<string> | null => {
+    if (aoeShape === "none" || !map || !hoverCell) return null;
+    const sizeFeet = Math.max(FEET_PER_CELL, parseInt(aoeSize, 10) || FEET_PER_CELL);
+    const sizeCells = sizeFeet / FEET_PER_CELL;
+    const [hx, hy] = hoverCell.split(",").map(Number);
+    const cells = new Set<string>();
+    const add = (x: number, y: number) => {
+      if (x >= 0 && y >= 0 && x < map.width && y < map.height) cells.add(`${x},${y}`);
+    };
+
+    if (aoeShape === "sphere") {
+      const r = Math.ceil(sizeCells);
+      for (let dy = -r; dy <= r; dy++) {
+        for (let dx = -r; dx <= r; dx++) {
+          if (Math.hypot(dx, dy) <= sizeCells + 0.01) add(hx + dx, hy + dy);
+        }
+      }
+    } else if (aoeShape === "cube") {
+      const side = Math.max(1, Math.round(sizeCells));
+      const start = -Math.floor((side - 1) / 2);
+      for (let dy = start; dy < start + side; dy++) {
+        for (let dx = start; dx < start + side; dx++) add(hx + dx, hy + dy);
+      }
+    } else {
+      // Cono y línea nacen del lanzador
+      if (!selectedToken) return null;
+      const ox = selectedToken.x;
+      const oy = selectedToken.y;
+      const dirX = hx - ox;
+      const dirY = hy - oy;
+      const dirLen = Math.hypot(dirX, dirY);
+      if (dirLen === 0) return null;
+      if (aoeShape === "line") {
+        for (let step = 1; step <= sizeCells; step++) {
+          add(Math.round(ox + (dirX / dirLen) * step), Math.round(oy + (dirY / dirLen) * step));
+        }
+      } else {
+        // Cono 5e: la anchura iguala a la longitud (semiángulo ≈ 26,6°)
+        const halfAngle = Math.atan(0.5);
+        const r = Math.ceil(sizeCells);
+        for (let dy = -r; dy <= r; dy++) {
+          for (let dx = -r; dx <= r; dx++) {
+            if (!dx && !dy) continue;
+            const dist = Math.hypot(dx, dy);
+            if (dist > sizeCells + 0.01) continue;
+            const dot = (dx * dirX + dy * dirY) / (dist * dirLen);
+            if (Math.acos(Math.min(1, Math.max(-1, dot))) <= halfAngle) add(ox + dx, oy + dy);
+          }
+        }
+      }
+    }
+    return cells;
+  };
+
+  const aoeCells = computeAoeCells();
+  const aoeAffected = aoeCells
+    ? visibleTokens.filter((token) => aoeCells.has(`${token.x},${token.y}`))
+    : [];
+
+  const AOE_LABELS: Record<string, string> = {
+    sphere: "esfera",
+    cube: "cubo",
+    cone: "cono",
+    line: "línea",
+  };
+
+  // Capa de plantillas de área: se repinta al mover el cursor o cambiar la forma
+  useEffect(() => {
+    const canvas = aoeRef.current;
+    if (!canvas || !map) return;
+    canvas.width = map.width * CELL;
+    canvas.height = map.height * CELL;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (!aoeCells) return;
+    ctx.fillStyle = "rgba(230, 120, 30, 0.35)";
+    ctx.strokeStyle = "rgba(255, 160, 60, 0.7)";
+    ctx.lineWidth = 1;
+    for (const key of aoeCells) {
+      const [x, y] = key.split(",").map(Number);
+      ctx.fillRect(x * CELL, y * CELL, CELL, CELL);
+      ctx.strokeRect(x * CELL + 0.5, y * CELL + 0.5, CELL - 1, CELL - 1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, hoverCell, aoeShape, aoeSize, selectedId]);
+
   /** Distancia en casillas desde la ficha seleccionada hasta el cursor. */
   const hoverDistance = (() => {
     if (!selectedToken || !hoverCell) return null;
@@ -498,7 +606,7 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
   })();
 
   const handleBoardMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!map || !selectedToken) return;
+    if (!map || (!selectedToken && aoeShape === "none")) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const x = Math.floor((e.clientX - rect.left) / CELL);
     const y = Math.floor((e.clientY - rect.top) / CELL);
@@ -655,6 +763,51 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
           </p>
           {notice && <p className={styles.notice}>{notice}</p>}
 
+          <div className={styles.aoeBar}>
+            <span className={styles.aoeLabel}>Plantilla:</span>
+            {(
+              [
+                ["none", "Ninguna"],
+                ["sphere", "◯ Esfera"],
+                ["cube", "▢ Cubo"],
+                ["cone", "◣ Cono"],
+                ["line", "─ Línea"],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                className={`${styles.conditionChip} ${aoeShape === value ? styles.conditionOn : ""}`}
+                onClick={() => setAoeShape(value)}
+              >
+                {label}
+              </button>
+            ))}
+            {aoeShape !== "none" && (
+              <>
+                <input
+                  className={`input ${styles.statInput}`}
+                  type="number"
+                  min={5}
+                  step={5}
+                  title={aoeShape === "sphere" ? "Radio en pies" : aoeShape === "cube" ? "Lado en pies" : "Longitud en pies"}
+                  value={aoeSize}
+                  onChange={(e) => setAoeSize(e.target.value)}
+                />
+                <span className={styles.aoeLabel}>pies</span>
+                <span className={styles.aoeInfo}>
+                  {(aoeShape === "cone" || aoeShape === "line") && !selectedToken
+                    ? "Selecciona la ficha del lanzador para apuntar."
+                    : aoeCells
+                      ? aoeAffected.length > 0
+                        ? `Afecta a: ${aoeAffected.map((t) => t.name).join(", ")} · clic para anunciarlo`
+                        : "Nadie en el área · clic para anunciarlo"
+                      : "Mueve el cursor sobre el mapa."}
+                </span>
+              </>
+            )}
+          </div>
+
           {selectedToken && (isDM || canMove(selectedToken)) && (
             <div className={styles.tokenTools}>
               <div className={styles.conditionRow}>
@@ -753,6 +906,7 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
             >
               <canvas ref={canvasRef} className={styles.canvas} />
               <canvas ref={overlayRef} className={styles.canvas} />
+              <canvas ref={aoeRef} className={styles.canvas} />
               {visibleTokens.map((token) => {
                 const stats = statsOf(token);
                 const down = stats.maxHp > 0 && stats.hp <= 0;

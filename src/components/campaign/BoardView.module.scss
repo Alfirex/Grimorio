@@ -133,6 +133,26 @@
   white-space: nowrap;
 }
 
+.aoeBar {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.6rem;
+}
+
+.aoeLabel {
+  color: $color-muted;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.aoeInfo {
+  color: $color-gold-light;
+  font-size: 0.78rem;
+  font-style: italic;
+}
+
 .tokenTools {
   align-items: center;
   display: flex;
