@@ -59,21 +59,174 @@ export const CLASSES: ClassDef[] = [
   { name: "Pícaro", hitDie: 8, spellcaster: false },
 ];
 
-export const RACES: string[] = [
-  "Humano",
-  "Elfo",
-  "Semielfo",
-  "Enano",
-  "Mediano",
-  "Gnomo",
-  "Semiorco",
-  "Dracónido",
-  "Tiefling",
-  "Aasimar",
-  "Goliat",
-  "Tabaxi",
-  "Otro",
+export const ABILITY_ABBR: Record<AbilityKey, string> = {
+  str: "FUE",
+  dex: "DES",
+  con: "CON",
+  int: "INT",
+  wis: "SAB",
+  cha: "CAR",
+};
+
+export interface RaceDef {
+  name: string;
+  /** Bonificadores de característica (+2 DES…). */
+  bonuses: Partial<Record<AbilityKey, number>>;
+  speed: number;
+  /** Competencias de habilidad que otorga (ids de SKILLS). */
+  skills?: string[];
+  /** Rasgos raciales, en una línea cada uno. */
+  traits: string[];
+  languages: string;
+}
+
+/** Razas del Manual del Jugador con su mecánica aplicable. */
+export const RACE_DETAILS: RaceDef[] = [
+  {
+    name: "Humano",
+    bonuses: { str: 1, dex: 1, con: 1, int: 1, wis: 1, cha: 1 },
+    speed: 30,
+    traits: ["Versátil: +1 a todas las características"],
+    languages: "común y otro a tu elección",
+  },
+  {
+    name: "Elfo",
+    bonuses: { dex: 2 },
+    speed: 30,
+    skills: ["perception"],
+    traits: [
+      "Visión en la oscuridad 60 pies",
+      "Sentidos agudos: competencia en Percepción",
+      "Linaje feérico: ventaja contra ser hechizado; la magia no puede dormirte",
+      "Trance: descansas 4 horas meditando",
+      "Subrazas: alto elfo +1 INT (un truco de mago), elfo de los bosques +1 SAB (35 pies)",
+    ],
+    languages: "común y élfico",
+  },
+  {
+    name: "Semielfo",
+    bonuses: { cha: 2 },
+    speed: 30,
+    traits: [
+      "+1 a otras dos características a tu elección",
+      "Visión en la oscuridad 60 pies",
+      "Linaje feérico: ventaja contra ser hechizado; la magia no puede dormirte",
+      "Versatilidad: competencia en dos habilidades a tu elección",
+    ],
+    languages: "común, élfico y otro a tu elección",
+  },
+  {
+    name: "Enano",
+    bonuses: { con: 2 },
+    speed: 25,
+    traits: [
+      "Visión en la oscuridad 60 pies",
+      "Resistencia enana: ventaja y resistencia contra veneno",
+      "Competencia con hachas y martillos de guerra",
+      "Afinidad con la piedra: doble competencia en Historia sobre labra de piedra",
+      "Subrazas: colinas +1 SAB (+1 PG por nivel), montañas +2 FUE (armaduras ligeras y medias)",
+    ],
+    languages: "común y enano",
+  },
+  {
+    name: "Mediano",
+    bonuses: { dex: 2 },
+    speed: 25,
+    traits: [
+      "Suertudo: repite los 1 en ataques, pruebas y salvaciones",
+      "Valiente: ventaja contra ser asustado",
+      "Agilidad: atraviesas el espacio de criaturas mayores que tú",
+      "Subrazas: piesligeros +1 CAR (esconderse tras criaturas), fornidos +1 CON (resistencia a veneno)",
+    ],
+    languages: "común y mediano",
+  },
+  {
+    name: "Gnomo",
+    bonuses: { int: 2 },
+    speed: 25,
+    traits: [
+      "Visión en la oscuridad 60 pies",
+      "Astucia gnoma: ventaja en salvaciones de INT, SAB y CAR contra magia",
+      "Subrazas: bosque +1 DES (Ilusión menor), rocas +1 CON (cachivaches)",
+    ],
+    languages: "común y gnomo",
+  },
+  {
+    name: "Semiorco",
+    bonuses: { str: 2, con: 1 },
+    speed: 30,
+    skills: ["intimidation"],
+    traits: [
+      "Visión en la oscuridad 60 pies",
+      "Amenazador: competencia en Intimidación",
+      "Aguante implacable: al caer a 0 PG te quedas a 1, una vez por descanso largo",
+      "Ataques salvajes: un dado de daño extra en tus críticos cuerpo a cuerpo",
+    ],
+    languages: "común y orco",
+  },
+  {
+    name: "Dracónido",
+    bonuses: { str: 2, cha: 1 },
+    speed: 30,
+    traits: [
+      "Linaje dracónico: elige tu dragón (determina daño del aliento y resistencia)",
+      "Arma de aliento: 2d6 en área (DES o CON CD 8+CON+comp., mitad si supera)",
+      "Resistencia al tipo de daño de tu linaje",
+    ],
+    languages: "común y dracónico",
+  },
+  {
+    name: "Tiefling",
+    bonuses: { cha: 2, int: 1 },
+    speed: 30,
+    traits: [
+      "Visión en la oscuridad 60 pies",
+      "Resistencia infernal: resistencia al fuego",
+      "Legado infernal: Taumaturgia; a nv 3 Reprensión infernal, a nv 5 Oscuridad (1/día)",
+    ],
+    languages: "común e infernal",
+  },
+  {
+    name: "Aasimar",
+    bonuses: { cha: 2, wis: 1 },
+    speed: 30,
+    traits: [
+      "Visión en la oscuridad 60 pies",
+      "Resistencia celestial: resistencia a daño necrótico y radiante",
+      "Manos sanadoras: cura tu nivel en PG por contacto, 1/descanso largo",
+      "Portador de luz: conoces el truco Luz",
+    ],
+    languages: "común y celestial",
+  },
+  {
+    name: "Goliat",
+    bonuses: { str: 2, con: 1 },
+    speed: 30,
+    skills: ["athletics"],
+    traits: [
+      "Atleta nato: competencia en Atletismo",
+      "Resistencia de piedra: reacción para reducir el daño 1d12 + CON, 1/descanso",
+      "Nacido en la montaña: aclimatado a gran altitud y frío",
+      "Corpulento: cuentas como una talla más para carga",
+    ],
+    languages: "común y gigante",
+  },
+  {
+    name: "Tabaxi",
+    bonuses: { dex: 2, cha: 1 },
+    speed: 30,
+    skills: ["perception", "stealth"],
+    traits: [
+      "Visión en la oscuridad 60 pies",
+      "Agilidad felina: duplica tu velocidad un turno (se recarga si no te mueves uno)",
+      "Garras: 1d4 + FUE cortante; velocidad de trepar 20 pies",
+      "Talento felino: competencia en Percepción y Sigilo",
+    ],
+    languages: "común y otro a tu elección",
+  },
 ];
+
+export const RACES: string[] = [...RACE_DETAILS.map((race) => race.name), "Otro"];
 
 export const ALIGNMENTS: string[] = [
   "Legal Bueno",
@@ -87,20 +240,100 @@ export const ALIGNMENTS: string[] = [
   "Caótico Malvado",
 ];
 
+export interface BackgroundDef {
+  name: string;
+  /** Competencias de habilidad (ids de SKILLS). */
+  skills: string[];
+  /** Herramientas, idiomas y equipo destacables. */
+  extras: string;
+  /** Rasgo del trasfondo: nombre — resumen. */
+  feature: string;
+}
+
+/** Trasfondos del Manual del Jugador con su mecánica aplicable. */
+export const BACKGROUND_DETAILS: BackgroundDef[] = [
+  {
+    name: "Acólito",
+    skills: ["insight", "religion"],
+    extras: "dos idiomas a tu elección",
+    feature: "Refugio de los fieles: los templos de tu fe te dan cobijo y ayuda",
+  },
+  {
+    name: "Artesano Gremial",
+    skills: ["insight", "persuasion"],
+    extras: "herramientas de artesano y un idioma",
+    feature: "Pertenencia al gremio: apoyo e influencia de tu gremio",
+  },
+  {
+    name: "Charlatán",
+    skills: ["deception", "sleight-of-hand"],
+    extras: "kit de disfraz y kit de falsificación",
+    feature: "Identidad falsa: una segunda identidad documentada",
+  },
+  {
+    name: "Criminal",
+    skills: ["deception", "stealth"],
+    extras: "kit de ladrón y un juego de azar",
+    feature: "Contacto criminal: enlace fiable con el hampa",
+  },
+  {
+    name: "Artista",
+    skills: ["acrobatics", "performance"],
+    extras: "kit de disfraz y un instrumento musical",
+    feature: "A petición del público: actúas a cambio de techo y comida",
+  },
+  {
+    name: "Héroe del Pueblo",
+    skills: ["animal-handling", "survival"],
+    extras: "herramientas de artesano y vehículos terrestres",
+    feature: "Hospitalidad rústica: la gente humilde te esconde y te ayuda",
+  },
+  {
+    name: "Noble",
+    skills: ["history", "persuasion"],
+    extras: "un juego de azar y un idioma",
+    feature: "Posición privilegiada: la alta sociedad te recibe",
+  },
+  {
+    name: "Ermitaño",
+    skills: ["medicine", "religion"],
+    extras: "kit de herboristería y un idioma",
+    feature: "Descubrimiento: conoces un secreto único y poderoso",
+  },
+  {
+    name: "Forastero",
+    skills: ["athletics", "survival"],
+    extras: "un instrumento musical y un idioma",
+    feature: "Errante: memoria excelente para mapas; encuentras comida para el grupo",
+  },
+  {
+    name: "Marinero",
+    skills: ["athletics", "perception"],
+    extras: "herramientas de navegante y vehículos acuáticos",
+    feature: "Pasaje de barco: viajas gratis por mar a cambio de trabajo",
+  },
+  {
+    name: "Soldado",
+    skills: ["athletics", "intimidation"],
+    extras: "un juego de azar y vehículos terrestres",
+    feature: "Rango militar: los soldados de tu antigua organización te reconocen",
+  },
+  {
+    name: "Huérfano",
+    skills: ["sleight-of-hand", "stealth"],
+    extras: "kit de disfraz y kit de ladrón",
+    feature: "Secretos de la ciudad: conoces los pasadizos urbanos; viajas al doble de rápido entre lugares de la ciudad",
+  },
+  {
+    name: "Sabio",
+    skills: ["arcana", "history"],
+    extras: "dos idiomas a tu elección",
+    feature: "Investigador: sabes dónde o a quién consultar lo que no conoces",
+  },
+];
+
 export const BACKGROUNDS: string[] = [
-  "Acólito",
-  "Artesano Gremial",
-  "Charlatán",
-  "Criminal",
-  "Artista",
-  "Héroe del Pueblo",
-  "Noble",
-  "Ermitaño",
-  "Forastero",
-  "Marinero",
-  "Soldado",
-  "Huérfano",
-  "Sabio",
+  ...BACKGROUND_DETAILS.map((bg) => bg.name),
   "Otro",
 ];
 

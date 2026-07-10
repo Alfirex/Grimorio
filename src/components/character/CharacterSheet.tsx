@@ -12,13 +12,16 @@ import {
   updateCharacter,
 } from "@/lib/db";
 import {
+  ABILITY_ABBR,
   ABILITY_KEYS,
   ABILITY_LABELS,
   ALIGNMENTS,
+  BACKGROUND_DETAILS,
   BACKGROUNDS,
   CLASSES,
   DEITIES,
   levelForXp,
+  RACE_DETAILS,
   RACES,
   SKILLS,
   SPELL_LEVEL_LABELS,
@@ -241,6 +244,7 @@ export function CharacterSheet({ characterId }: { characterId: string }) {
                   <option key={race}>{race}</option>
                 ))}
               </select>
+              {isOwner && <RaceMechanics character={character} onChange={set} />}
             </label>
             <label>
               <span className="field-label">Clase</span>
@@ -285,6 +289,7 @@ export function CharacterSheet({ characterId }: { characterId: string }) {
                   <option key={bg}>{bg}</option>
                 ))}
               </select>
+              {isOwner && <BackgroundMechanics character={character} onChange={set} />}
             </label>
             <label>
               <span className="field-label">Alineamiento</span>
@@ -1291,6 +1296,129 @@ function RestButtons({
       </button>
       {lastRoll && <span className={styles.restNote}>{lastRoll}</span>}
     </div>
+  );
+}
+
+/** Añade a una lista los elementos que falten, sin duplicar. */
+function union<T>(list: T[], extra: T[]): T[] {
+  return [...list, ...extra.filter((item) => !list.includes(item))];
+}
+
+/** Añade líneas a un texto solo si no estaban ya. */
+function appendLines(text: string, lines: string[]): string {
+  const missing = lines.filter((line) => !text.includes(line));
+  if (missing.length === 0) return text;
+  const current = text.trimEnd();
+  return current ? `${current}\n${missing.join("\n")}` : missing.join("\n");
+}
+
+/** Mecánica de la raza elegida: bonificadores, velocidad, rasgos e idiomas. */
+function RaceMechanics({
+  character,
+  onChange,
+}: {
+  character: Character;
+  onChange: (patch: Partial<Character>) => void;
+}) {
+  const def = RACE_DETAILS.find((race) => race.name === character.race);
+  if (!def) return null;
+
+  const bonusText = (Object.entries(def.bonuses) as Array<[AbilityKey, number]>)
+    .map(([key, bonus]) => `+${bonus} ${ABILITY_ABBR[key]}`)
+    .join(", ");
+  const traitLines = def.traits.map((trait) => `${def.name} — ${trait}`);
+  const applied = traitLines.every((line) => character.featuresAndTraits.includes(line));
+
+  const apply = () => {
+    if (
+      !window.confirm(
+        `¿Aplicar la raza ${def.name}?\n\n· ${bonusText} (se suma a tus características actuales: hazlo una sola vez)\n· Velocidad ${def.speed} pies\n· ${def.traits.length} rasgos raciales e idiomas (${def.languages})`
+      )
+    )
+      return;
+    const abilities = { ...character.abilities };
+    for (const [key, bonus] of Object.entries(def.bonuses) as Array<[AbilityKey, number]>) {
+      abilities[key] += bonus;
+    }
+    onChange({
+      abilities,
+      speed: def.speed,
+      skillProfs: union(character.skillProfs, def.skills ?? []),
+      featuresAndTraits: appendLines(character.featuresAndTraits, traitLines),
+      otherProficiencies: character.otherProficiencies.includes(def.languages)
+        ? character.otherProficiencies
+        : appendLines(character.otherProficiencies, [`Idiomas: ${def.languages}`]),
+    });
+  };
+
+  return (
+    <span className={styles.mechanicsRow}>
+      <em className={styles.mechanicsHint}>
+        {bonusText} · {def.speed} pies
+      </em>
+      <button
+        type="button"
+        className="btn btn--sm"
+        disabled={applied}
+        title={
+          applied
+            ? "Rasgos ya aplicados"
+            : `Suma ${bonusText}, fija la velocidad y añade los rasgos raciales a la ficha`
+        }
+        onClick={apply}
+      >
+        {applied ? "✓ Aplicada" : "Aplicar"}
+      </button>
+    </span>
+  );
+}
+
+/** Mecánica del trasfondo elegido: competencias, extras y rasgo. */
+function BackgroundMechanics({
+  character,
+  onChange,
+}: {
+  character: Character;
+  onChange: (patch: Partial<Character>) => void;
+}) {
+  const def = BACKGROUND_DETAILS.find((bg) => bg.name === character.background);
+  if (!def) return null;
+
+  const skillNames = def.skills
+    .map((id) => SKILLS.find((skill) => skill.id === id)?.label ?? id)
+    .join(", ");
+  const featureLine = `Trasfondo — ${def.feature}`;
+  const applied =
+    character.featuresAndTraits.includes(featureLine) &&
+    def.skills.every((id) => character.skillProfs.includes(id));
+
+  const apply = () => {
+    onChange({
+      skillProfs: union(character.skillProfs, def.skills),
+      featuresAndTraits: appendLines(character.featuresAndTraits, [featureLine]),
+      otherProficiencies: character.otherProficiencies.includes(def.extras)
+        ? character.otherProficiencies
+        : appendLines(character.otherProficiencies, [`${def.name}: ${def.extras}`]),
+    });
+  };
+
+  return (
+    <span className={styles.mechanicsRow}>
+      <em className={styles.mechanicsHint}>{skillNames}</em>
+      <button
+        type="button"
+        className="btn btn--sm"
+        disabled={applied}
+        title={
+          applied
+            ? "Trasfondo ya aplicado"
+            : `Añade competencia en ${skillNames}, ${def.extras} y su rasgo`
+        }
+        onClick={apply}
+      >
+        {applied ? "✓ Aplicado" : "Aplicar"}
+      </button>
+    </span>
   );
 }
 

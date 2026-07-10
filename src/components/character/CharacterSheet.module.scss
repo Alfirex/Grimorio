@@ -456,6 +456,20 @@
   margin-top: 0.2rem;
 }
 
+.mechanicsRow {
+  align-items: center;
+  display: flex;
+  gap: 0.4rem;
+  justify-content: space-between;
+  margin-top: 0.3rem;
+}
+
+.mechanicsHint {
+  color: $color-muted;
+  font-size: 0.72rem;
+  font-style: italic;
+}
+
 .restRow {
   align-items: center;
   display: flex;
