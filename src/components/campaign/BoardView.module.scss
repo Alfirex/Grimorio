@@ -153,6 +153,49 @@
   font-style: italic;
 }
 
+.zoomGroup {
+  align-items: center;
+  display: flex;
+  gap: 0.35rem;
+  margin-left: auto;
+}
+
+.zoomValue {
+  color: $color-muted;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  min-width: 2.6rem;
+  text-align: center;
+}
+
+// Estado de las puertas: cerradas bloquean el paso, abiertas se pisan
+.door {
+  height: 32px;
+  pointer-events: none;
+  position: absolute;
+  width: 32px;
+}
+
+.doorClosed {
+  align-items: center;
+  background: rgba(70, 44, 14, 0.9);
+  border: 2px solid #8a5a20;
+  border-radius: 3px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  display: flex;
+  font-size: 0.8rem;
+  justify-content: center;
+
+  &::after {
+    content: "🚪";
+  }
+}
+
+.doorOpen {
+  border: 1px dashed rgba($color-gold, 0.45);
+  border-radius: 3px;
+}
+
 .tokenTools {
   align-items: center;
   display: flex;

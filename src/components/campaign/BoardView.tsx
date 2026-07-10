@@ -16,6 +16,7 @@ import {
   revealBoardRoom,
   setBoardTokenConditions,
   setBoardTokenHp,
+  setCampaignDoors,
   updateCharacter,
   upsertBoardToken,
 } from "@/lib/db";
@@ -75,6 +76,7 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
   const [enemySpeed, setEnemySpeed] = useState("30");
   const [enemyXp, setEnemyXp] = useState("25");
   const [enemyRoom, setEnemyRoom] = useState("0");
+  const [zoom, setZoom] = useState(1);
 
   const board = campaign.board ?? null;
   const tokens = useMemo(() => campaign.tokens ?? {}, [campaign.tokens]);
@@ -83,6 +85,10 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
   const revealed = useMemo(
     () => new Set(campaign.revealedRooms ?? []),
     [campaign.revealedRooms]
+  );
+  const openDoors = useMemo(
+    () => new Set(campaign.openDoors ?? []),
+    [campaign.openDoors]
   );
 
   // Regenerar la mazmorra es determinista y barato: misma semilla → mismo mapa
@@ -114,6 +120,10 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
     const character = characterOf(token);
     return character?.ownerUid === user?.uid;
   };
+
+  /** Una puerta cerrada bloquea el paso como si fuera muro. */
+  const isClosedDoor = (x: number, y: number): boolean =>
+    map?.grid[y]?.[x] === "door" && !openDoors.has(`${x},${y}`);
 
   /** Niebla de guerra: los enemigos de salas no descubiertas son invisibles para jugadores. */
   const hiddenFromPlayers = (token: BoardToken): boolean => {
@@ -162,6 +172,7 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
               nx < map.width &&
               ny < map.height &&
               map.grid[ny][nx] !== "wall" &&
+              !(map.grid[ny][nx] === "door" && !openDoors.has(key)) &&
               !visited.has(key)
             ) {
               visited.add(key);
@@ -173,7 +184,7 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
       frontier = next;
     }
     return visited;
-  }, [map, selectedToken, characters, isDM, freeMove]);
+  }, [map, selectedToken, characters, isDM, freeMove, openDoors]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -220,11 +231,43 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
 
   const appendLog = (text: string) => appendBoardLog(campaign.id, log, text);
 
+  /** Abre o cierra una puerta y lo anota; devuelve true si la gestionó. */
+  const handleDoorClick = async (x: number, y: number): Promise<boolean> => {
+    if (!map || map.grid[y][x] !== "door") return false;
+    const key = `${x},${y}`;
+    const adjacentOwnToken = (token: BoardToken) =>
+      canMove(token) &&
+      Math.max(Math.abs(token.x - x), Math.abs(token.y - y)) === 1;
+
+    if (!openDoors.has(key)) {
+      // Abrir: el máster siempre; un jugador, con su ficha seleccionada al lado
+      const opener =
+        selectedToken && adjacentOwnToken(selectedToken) ? selectedToken : null;
+      if (isDM || opener) {
+        await setCampaignDoors(campaign.id, [...openDoors, key]);
+        await appendLog(`🚪 ${opener?.name ?? "El máster"} abre una puerta.`);
+      } else {
+        setNotice("La puerta está cerrada: acerca tu ficha para abrirla.");
+      }
+      return true;
+    }
+    // Cerrar: clic sin ficha seleccionada (máster, o jugador con ficha adyacente)
+    if (!selectedId && (isDM || tokenList.some(adjacentOwnToken))) {
+      await setCampaignDoors(
+        campaign.id,
+        [...openDoors].filter((door) => door !== key)
+      );
+      await appendLog("🚪 Se cierra una puerta.");
+      return true;
+    }
+    return false; // puerta abierta con ficha seleccionada: se puede pisar
+  };
+
   const handleBoardClick = async (e: React.MouseEvent<HTMLDivElement>) => {
     if (!map) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = Math.floor((e.clientX - rect.left) / CELL);
-    const y = Math.floor((e.clientY - rect.top) / CELL);
+    const x = Math.floor((e.clientX - rect.left) / (CELL * zoom));
+    const y = Math.floor((e.clientY - rect.top) / (CELL * zoom));
     if (x < 0 || y < 0 || x >= map.width || y >= map.height) return;
 
     // Con una plantilla activa, el clic anuncia el área en vez de mover
@@ -241,6 +284,7 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
     }
 
     setNotice("");
+    if (await handleDoorClick(x, y)) return;
     const clicked = visibleTokens.find((t) => t.x === x && t.y === y);
 
     if (clicked) {
@@ -262,6 +306,10 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
     }
 
     if (selectedId && selectedToken && map.grid[y][x] !== "wall") {
+      if (isClosedDoor(x, y)) {
+        setNotice("La puerta está cerrada.");
+        return;
+      }
       if (reachable && !reachable.has(`${x},${y}`)) {
         setNotice(
           `Fuera de alcance: «${selectedToken.name}» solo puede recorrer ${statsOf(selectedToken).speed} pies (${Math.floor(statsOf(selectedToken).speed / FEET_PER_CELL)} casillas).`
@@ -460,6 +508,26 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
     setCombat(null);
   };
 
+  /** Clona el enemigo seleccionado con PG frescos en una casilla libre de su sala. */
+  const handleDuplicateSelected = () => {
+    if (!selectedToken || selectedToken.characterId !== null || !guardTokenLimit(1)) return;
+    const room = roomIndexAt(selectedToken.x, selectedToken.y);
+    const [cell] = findFreeCells(1, tokenList, room >= 0 ? room : undefined);
+    if (!cell) {
+      setNotice("No queda sitio libre en esa sala.");
+      return;
+    }
+    upsertBoardToken(campaign.id, {
+      ...selectedToken,
+      id: crypto.randomUUID(),
+      name: numberedName(selectedToken.name.replace(/\s\d+$/, "")),
+      x: cell.x,
+      y: cell.y,
+      hp: selectedToken.maxHp ?? selectedToken.hp,
+      conditions: [],
+    });
+  };
+
   /** Daño o cura manual del máster sobre la ficha seleccionada. */
   const applyHpDelta = async (sign: 1 | -1) => {
     if (!selectedToken) return;
@@ -576,6 +644,17 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
     line: "línea",
   };
 
+  const doorCells = useMemo(() => {
+    if (!map) return [];
+    const cells: Array<{ x: number; y: number }> = [];
+    for (let y = 0; y < map.height; y++) {
+      for (let x = 0; x < map.width; x++) {
+        if (map.grid[y][x] === "door") cells.push({ x, y });
+      }
+    }
+    return cells;
+  }, [map]);
+
   // Capa de plantillas de área: se repinta al mover el cursor o cambiar la forma
   useEffect(() => {
     const canvas = aoeRef.current;
@@ -608,8 +687,8 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
   const handleBoardMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!map || (!selectedToken && aoeShape === "none")) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = Math.floor((e.clientX - rect.left) / CELL);
-    const y = Math.floor((e.clientY - rect.top) / CELL);
+    const x = Math.floor((e.clientX - rect.left) / (CELL * zoom));
+    const y = Math.floor((e.clientY - rect.top) / (CELL * zoom));
     const key = x >= 0 && y >= 0 && x < map.width && y < map.height ? `${x},${y}` : null;
     setHoverCell((prev) => (prev === key ? prev : key));
   };
@@ -718,6 +797,16 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
               />
               Mov. libre
             </label>
+            {selectedToken && selectedToken.characterId === null && (
+              <button
+                type="button"
+                className="btn btn--sm"
+                title="Añade una copia con PG completos en la misma sala"
+                onClick={handleDuplicateSelected}
+              >
+                ⧉ Duplicar
+              </button>
+            )}
             {selectedToken && (
               <button type="button" className="btn btn--danger btn--sm" onClick={handleRemoveSelected}>
                 Quitar «{selectedToken.name}»
@@ -806,6 +895,25 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
                 </span>
               </>
             )}
+            <span className={styles.zoomGroup}>
+              <button
+                type="button"
+                className="btn btn--sm"
+                disabled={zoom <= 0.5}
+                onClick={() => setZoom((z) => Math.max(0.5, +(z - 0.25).toFixed(2)))}
+              >
+                −
+              </button>
+              <span className={styles.zoomValue}>{Math.round(zoom * 100)}%</span>
+              <button
+                type="button"
+                className="btn btn--sm"
+                disabled={zoom >= 2}
+                onClick={() => setZoom((z) => Math.min(2, +(z + 0.25).toFixed(2)))}
+              >
+                +
+              </button>
+            </span>
           </div>
 
           {selectedToken && (isDM || canMove(selectedToken)) && (
@@ -898,15 +1006,34 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
 
           <div className={styles.scroll}>
             <div
-              className={styles.boardInner}
-              style={{ width: map.width * CELL, height: map.height * CELL }}
-              onClick={handleBoardClick}
-              onMouseMove={handleBoardMouseMove}
-              onMouseLeave={() => setHoverCell(null)}
+              style={{ width: map.width * CELL * zoom, height: map.height * CELL * zoom }}
             >
+              <div
+                className={styles.boardInner}
+                style={{
+                  width: map.width * CELL,
+                  height: map.height * CELL,
+                  transform: `scale(${zoom})`,
+                  transformOrigin: "0 0",
+                }}
+                onClick={handleBoardClick}
+                onMouseMove={handleBoardMouseMove}
+                onMouseLeave={() => setHoverCell(null)}
+              >
               <canvas ref={canvasRef} className={styles.canvas} />
               <canvas ref={overlayRef} className={styles.canvas} />
               <canvas ref={aoeRef} className={styles.canvas} />
+              {doorCells.map(({ x, y }) => {
+                const open = openDoors.has(`${x},${y}`);
+                return (
+                  <div
+                    key={`door-${x},${y}`}
+                    className={`${styles.door} ${open ? styles.doorOpen : styles.doorClosed}`}
+                    style={{ left: x * CELL, top: y * CELL }}
+                    title={open ? "Puerta abierta" : "Puerta cerrada"}
+                  />
+                );
+              })}
               {visibleTokens.map((token) => {
                 const stats = statsOf(token);
                 const down = stats.maxHp > 0 && stats.hp <= 0;
@@ -952,6 +1079,7 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
                   </div>
                 );
               })}
+              </div>
             </div>
           </div>
 

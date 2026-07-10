@@ -72,7 +72,7 @@ service cloud.firestore {
         (resource.data.dmUid == request.auth.uid ||
          (request.auth.uid in resource.data.memberUids &&
           request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['tokens', 'boardLog', 'revealedRooms'])) ||
+            .hasOnly(['tokens', 'boardLog', 'revealedRooms', 'openDoors'])) ||
          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberUids']) &&
           request.resource.data.memberUids.hasAll(resource.data.memberUids) &&
           request.auth.uid in request.resource.data.memberUids));

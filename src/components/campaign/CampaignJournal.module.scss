@@ -1,0 +1,81 @@
+@use "../../styles/variables" as *;
+@use "../../styles/mixins" as *;
+
+.heading {
+  color: $color-gold;
+  font-size: 1.05rem;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.9rem;
+  text-transform: uppercase;
+}
+
+.form {
+  display: grid;
+  gap: 0.5rem;
+  justify-items: end;
+  margin-bottom: 0.9rem;
+
+  textarea {
+    justify-self: stretch;
+    resize: vertical;
+  }
+}
+
+.empty {
+  color: $color-muted;
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.list {
+  @include scrollbar-thin;
+  display: grid;
+  gap: 0.75rem;
+  list-style: none;
+  margin: 0;
+  max-height: 24rem;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.entry {
+  border-left: 2px solid rgba($color-gold, 0.4);
+  padding-left: 0.75rem;
+}
+
+.entryHeader {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: space-between;
+}
+
+.date {
+  color: $color-gold-light;
+  font-family: $font-display;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.text {
+  color: $color-cream;
+  font-size: 0.88rem;
+  margin-top: 0.2rem;
+  white-space: pre-wrap;
+}
+
+.delete {
+  background: none;
+  border: none;
+  color: $color-muted;
+  cursor: pointer;
+  font-size: 0.75rem;
+  opacity: 0.5;
+  transition: color 0.15s ease, opacity 0.15s ease;
+
+  &:hover {
+    color: $color-blood-light;
+    opacity: 1;
+  }
+}

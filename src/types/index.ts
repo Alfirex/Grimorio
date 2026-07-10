@@ -154,6 +154,13 @@ export interface BoardLogEntry {
   timestamp: number;
 }
 
+/** Entrada del diario de campaña (crónica de sesiones, escrita por el máster). */
+export interface JournalEntry {
+  id: string;
+  text: string;
+  timestamp: number;
+}
+
 export interface Campaign {
   id: string;
   name: string;
@@ -170,6 +177,10 @@ export interface Campaign {
   revealedRooms?: number[];
   /** Encuentro en curso: orden de iniciativa visible para todos. */
   encounter?: Encounter | null;
+  /** Puertas abiertas del tablero, como claves "x,y" (las demás están cerradas). */
+  openDoors?: string[];
+  /** Diario de campaña: crónica de sesiones visible para todos. */
+  journal?: JournalEntry[];
 }
 
 export interface Combatant {

@@ -21,6 +21,7 @@ import type {
   Character,
   CharacterNote,
   Encounter,
+  JournalEntry,
   NoteVisibility,
 } from "@/types";
 
@@ -287,4 +288,35 @@ export async function removeBoardLogEntry(
 /** Vacía el registro de combate por completo. */
 export async function clearBoardLog(campaignId: string): Promise<void> {
   await updateDoc(doc(getDb(), "campaigns", campaignId), { boardLog: [] });
+}
+
+/** Actualiza el conjunto de puertas abiertas del tablero. */
+export async function setCampaignDoors(
+  campaignId: string,
+  openDoors: string[]
+): Promise<void> {
+  await updateDoc(doc(getDb(), "campaigns", campaignId), { openDoors });
+}
+
+/** Añade una entrada al diario de campaña (solo el máster). */
+export async function addJournalEntry(
+  campaignId: string,
+  current: JournalEntry[],
+  text: string
+): Promise<void> {
+  const entry: JournalEntry = { id: crypto.randomUUID(), text, timestamp: Date.now() };
+  await updateDoc(doc(getDb(), "campaigns", campaignId), {
+    journal: [entry, ...current],
+  });
+}
+
+/** Elimina una entrada del diario de campaña. */
+export async function removeJournalEntry(
+  campaignId: string,
+  current: JournalEntry[],
+  entryId: string
+): Promise<void> {
+  await updateDoc(doc(getDb(), "campaigns", campaignId), {
+    journal: current.filter((entry) => entry.id !== entryId),
+  });
 }

@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { deleteCampaign, subscribeCampaign, subscribeCampaignCharacters } from "@/lib/db";
 import { BoardView } from "@/components/campaign/BoardView";
+import { CampaignJournal } from "@/components/campaign/CampaignJournal";
 import { InitiativeTracker } from "@/components/campaign/InitiativeTracker";
 import { passivePerception } from "@/utils/character";
 import type { Campaign, Character } from "@/types";
@@ -127,6 +128,8 @@ function CampaignView({ campaignId }: { campaignId: string }) {
           <InitiativeTracker campaign={campaign} characters={characters} isDM={isDM} />
         </section>
       </div>
+
+      <CampaignJournal campaign={campaign} isDM={isDM} />
     </div>
   );
 }
