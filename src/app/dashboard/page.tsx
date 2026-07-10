@@ -57,19 +57,63 @@ function Dashboard() {
     }
   };
 
+  /** Importa un personaje exportado como JSON, saneando campos protegidos. */
+  const handleImportCharacter = async (file: File | undefined) => {
+    if (!user || !file) return;
+    setBusy(true);
+    setError("");
+    try {
+      const parsed = JSON.parse(await file.text()) as Record<string, unknown>;
+      const blank = createBlankCharacter(user.uid, user.displayName ?? "Aventurero");
+      // Solo se aceptan los campos que existen en una ficha, nunca los de cuenta
+      const PROTECTED = new Set([
+        "ownerUid",
+        "ownerName",
+        "campaignId",
+        "createdAt",
+        "updatedAt",
+      ]);
+      const data = { ...blank } as Record<string, unknown>;
+      for (const key of Object.keys(blank)) {
+        if (!PROTECTED.has(key) && key in parsed) data[key] = parsed[key];
+      }
+      const id = await createCharacter(data as typeof blank);
+      router.push(`/characters/${id}`);
+    } catch {
+      setError("Ese archivo no parece un personaje exportado válido.");
+      setBusy(false);
+    }
+  };
+
   return (
     <div className={styles.grid}>
       <section>
         <div className={styles.sectionHeader}>
           <h2 className={styles.heading}>Mis personajes</h2>
-          <button
-            type="button"
-            className="btn btn--gold btn--sm"
-            onClick={handleNewCharacter}
-            disabled={busy}
-          >
-            + Nuevo personaje
-          </button>
+          <div className={styles.headerActions}>
+            <label className="btn btn--sm" title="Importa un personaje exportado como JSON">
+              ⬆ Importar
+              <input
+                type="file"
+                accept="application/json,.json"
+                hidden
+                disabled={busy}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = "";
+                  handleImportCharacter(file);
+                }}
+              />
+            </label>
+            <button
+              type="button"
+              className="btn btn--gold btn--sm"
+              onClick={handleNewCharacter}
+              disabled={busy}
+            >
+              + Nuevo personaje
+            </button>
+          </div>
         </div>
 
         {characters.length === 0 ? (

@@ -34,6 +34,7 @@ import {
   featuresFor,
   maxSpellLevelFor,
   spellAbilityFor,
+  spellRangeFor,
   spellSlotsFor,
   spellsFor,
 } from "@/data/srd";
@@ -51,7 +52,7 @@ import {
   spellSaveDC,
 } from "@/utils/character";
 import { fileToAvatar } from "@/utils/image";
-import type { AbilityKey, Campaign, Character, InventoryItem } from "@/types";
+import type { AbilityKey, Campaign, Character, InventoryItem, Spell } from "@/types";
 import { NotesPanel } from "./NotesPanel";
 import styles from "./CharacterSheet.module.scss";
 
@@ -156,6 +157,31 @@ export function CharacterSheet({ characterId }: { characterId: string }) {
       <div className={styles.toolbar}>
         <h1 className={styles.pageTitle}>{character.name || "Personaje sin nombre"}</h1>
         <div className={styles.toolbarActions}>
+          <button
+            type="button"
+            className="btn btn--sm"
+            title="Descarga la ficha como JSON: copia de seguridad o para compartir el personaje"
+            onClick={() => {
+              const data: Partial<Character> = { ...character };
+              // Datos de cuenta y campaña fuera: el JSON es solo el personaje
+              delete data.id;
+              delete data.ownerUid;
+              delete data.ownerName;
+              delete data.campaignId;
+              delete data.createdAt;
+              delete data.updatedAt;
+              const blob = new Blob([JSON.stringify(data, null, 2)], {
+                type: "application/json",
+              });
+              const link = document.createElement("a");
+              link.download = `${character.name.trim() || "personaje"}.json`;
+              link.href = URL.createObjectURL(blob);
+              link.click();
+              URL.revokeObjectURL(link.href);
+            }}
+          >
+            ⬇ JSON
+          </button>
           <button
             type="button"
             className="btn btn--sm"
@@ -926,6 +952,26 @@ function SpellsSection({
     setNewSpellPick("");
   };
 
+  /** Convierte un conjuro del grimorio en un ataque usable en el tablero. */
+  const addSpellAsAttack = (spell: Spell) => {
+    const bonus = spellAttackBonus(character);
+    const dice = spell.description.match(/\d{0,3}d\d{1,4}(?:\s*[+-]\s*\d{1,4})?/i)?.[0];
+    const range = spellRangeFor(spell.name);
+    onChange({
+      attacks: [
+        ...character.attacks,
+        {
+          id: crypto.randomUUID(),
+          name: spell.name,
+          bonus: bonus !== null ? formatModifier(bonus) : "+0",
+          damage: dice ?? "",
+          type: "Conjuro",
+          ...(range !== undefined && { range }),
+        },
+      ],
+    });
+  };
+
   return (
     <section className="panel">
       <h2 className="section-title">Conjuros</h2>
@@ -1075,17 +1121,35 @@ function SpellsSection({
                       }
                     />
                     {isOwner && (
-                      <button
-                        type="button"
-                        className="btn btn--danger btn--sm"
-                        onClick={() =>
-                          onChange({
-                            spells: character.spells.filter((s) => s.id !== spell.id),
-                          })
-                        }
-                      >
-                        ✕
-                      </button>
+                      <>
+                        <button
+                          type="button"
+                          className="btn btn--sm"
+                          disabled={
+                            !spell.name.trim() ||
+                            character.attacks.some((a) => a.name === spell.name)
+                          }
+                          title={
+                            character.attacks.some((a) => a.name === spell.name)
+                              ? "Ya está entre tus ataques"
+                              : "Añadir a tus ataques con tu bono de conjuro, su daño y su alcance (usable en el tablero)"
+                          }
+                          onClick={() => addSpellAsAttack(spell)}
+                        >
+                          ⚔
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn--danger btn--sm"
+                          onClick={() =>
+                            onChange({
+                              spells: character.spells.filter((s) => s.id !== spell.id),
+                            })
+                          }
+                        >
+                          ✕
+                        </button>
+                      </>
                     )}
                   </div>
                 ))}

@@ -29,6 +29,11 @@
   margin-bottom: 0;
 }
 
+.headerActions {
+  display: flex;
+  gap: 0.4rem;
+}
+
 .empty {
   color: $color-muted;
   font-style: italic;

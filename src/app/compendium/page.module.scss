@@ -1,0 +1,152 @@
+@use "../../styles/variables" as *;
+@use "../../styles/mixins" as *;
+
+.page {
+  display: grid;
+  gap: 1rem;
+}
+
+.title {
+  color: $color-gold;
+  font-size: 1.6rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+
+  input {
+    flex: 1;
+    min-width: 12rem;
+  }
+
+  select {
+    width: auto;
+  }
+}
+
+.empty {
+  color: $color-muted;
+  font-style: italic;
+}
+
+.spellList {
+  display: grid;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.spellRow {
+  @include panel;
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.6rem 0.9rem;
+}
+
+.spellLevel {
+  color: $color-gold-light;
+  flex-shrink: 0;
+  font-family: $font-display;
+  font-size: 0.75rem;
+  font-weight: 700;
+  min-width: 3.2rem;
+  padding-top: 0.15rem;
+  text-transform: uppercase;
+}
+
+.spellBody {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.spellName {
+  color: $color-cream;
+  font-family: $font-display;
+  font-weight: 700;
+}
+
+.spellRange {
+  color: $color-muted;
+  font-family: $font-body;
+  font-size: 0.8rem;
+  font-style: normal;
+  font-weight: 400;
+}
+
+.spellDescription {
+  color: $color-cream;
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+.spellClasses {
+  color: $color-muted;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}
+
+.monsterGrid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+}
+
+.monster {
+  padding: 0.9rem;
+}
+
+.monsterTop {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.monsterImg {
+  background: $color-ink;
+  border: 2px solid $color-border-light;
+  border-radius: $radius-md;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.monsterEmoji {
+  align-items: center;
+  background: $color-ink;
+  border: 2px solid $color-border-light;
+  border-radius: $radius-md;
+  display: flex;
+  flex-shrink: 0;
+  font-size: 2.4rem;
+  height: 90px;
+  justify-content: center;
+  width: 90px;
+}
+
+.monsterName {
+  color: $color-gold-light;
+  font-size: 1rem;
+}
+
+.monsterStats {
+  color: $color-cream;
+  font-size: 0.8rem;
+  margin-top: 0.15rem;
+}
+
+.monsterList {
+  color: $color-muted;
+  display: grid;
+  font-size: 0.78rem;
+  gap: 0.15rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}

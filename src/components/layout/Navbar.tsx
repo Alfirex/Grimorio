@@ -9,6 +9,7 @@ import styles from "./Navbar.module.scss";
 const NAV_LINKS = [
   { href: "/dashboard", label: "Mi Mesa" },
   { href: "/map-generator", label: "Mapas" },
+  { href: "/compendium", label: "Compendio" },
 ];
 
 export function Navbar() {
