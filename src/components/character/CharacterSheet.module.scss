@@ -168,6 +168,38 @@
   text-align: right;
 }
 
+// Bono tirable: mismo aspecto que .checkBonus pero como botón
+.rollBtn {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: $color-gold-light;
+  cursor: pointer;
+  font-family: $font-display;
+  font-size: 0.85rem;
+  font-weight: 700;
+  min-width: 3.4rem;
+  padding: 0.05rem 0.3rem;
+  text-align: right;
+  transition: border-color 0.15s ease, background 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: rgba($color-gold, 0.08);
+    border-color: rgba($color-gold, 0.5);
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+}
+
+.rollResult {
+  color: $color-gold-light;
+  font-size: 0.8rem;
+  font-style: italic;
+  margin-top: 0.5rem;
+}
+
 .expertiseBtn {
   background: none;
   border: none;

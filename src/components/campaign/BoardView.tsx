@@ -65,6 +65,7 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
   const [freeMove, setFreeMove] = useState(false);
   const [creature, setCreature] = useState("0"); // índice del bestiario o "custom"
   const [hpDelta, setHpDelta] = useState("5");
+  const [hoverCell, setHoverCell] = useState<string | null>(null); // "x,y" bajo el cursor
   const [enemyName, setEnemyName] = useState("");
   const [enemyHp, setEnemyHp] = useState("7");
   const [enemyAc, setEnemyAc] = useState("13");
@@ -453,12 +454,27 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
     const next =
       sign > 0 ? Math.min(cap, stats.hp + amount) : Math.max(0, stats.hp - amount);
     const character = characterOf(selectedToken);
-    if (character) await updateCharacter(character.id, { currentHp: next });
-    else await setBoardTokenHp(campaign.id, selectedToken.id, next);
+    if (character) {
+      await updateCharacter(character.id, {
+        currentHp: next,
+        // Recuperar PG estando a 0 despierta y limpia las salvaciones de muerte
+        ...(sign > 0 && stats.hp === 0 && next > 0
+          ? { deathSaves: { successes: 0, failures: 0 } }
+          : {}),
+      });
+    } else {
+      await setBoardTokenHp(campaign.id, selectedToken.id, next);
+    }
+    const fallNote =
+      sign < 0 && next === 0 && stats.hp > 0
+        ? character
+          ? ` 😵 ¡${selectedToken.name} cae inconsciente!`
+          : ` ☠ ${selectedToken.name} cae.`
+        : "";
     await appendLog(
       sign > 0
         ? `✚ ${selectedToken.name} recupera ${amount} PG (${next}${stats.maxHp > 0 ? `/${stats.maxHp}` : ""}).`
-        : `💥 ${selectedToken.name} recibe ${amount} de daño (queda a ${next} PG).`
+        : `💥 ${selectedToken.name} recibe ${amount} de daño (queda a ${next} PG).${fallNote}`
     );
   };
 
@@ -472,6 +488,23 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
 
   const attacker = combat ? (tokens[combat.attackerId] ?? null) : null;
   const target = combat ? (tokens[combat.targetId] ?? null) : null;
+
+  /** Distancia en casillas desde la ficha seleccionada hasta el cursor. */
+  const hoverDistance = (() => {
+    if (!selectedToken || !hoverCell) return null;
+    const [hx, hy] = hoverCell.split(",").map(Number);
+    const cells = Math.max(Math.abs(selectedToken.x - hx), Math.abs(selectedToken.y - hy));
+    return cells > 0 ? cells : null;
+  })();
+
+  const handleBoardMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!map || !selectedToken) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = Math.floor((e.clientX - rect.left) / CELL);
+    const y = Math.floor((e.clientY - rect.top) / CELL);
+    const key = x >= 0 && y >= 0 && x < map.width && y < map.height ? `${x},${y}` : null;
+    setHoverCell((prev) => (prev === key ? prev : key));
+  };
 
   return (
     <section className="panel">
@@ -613,6 +646,12 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
             {selectedToken
               ? `«${selectedToken.name}» seleccionada — verde: puede llegar · rojo: fuera de su velocidad (${statsOf(selectedToken).speed} pies). Clic en ficha rival para atacar.`
               : "Haz clic en una ficha para seleccionarla; luego en una casilla para moverla o en una ficha rival para atacar."}
+            {hoverDistance !== null && (
+              <strong className={styles.distance}>
+                {" "}
+                📏 {hoverDistance} casilla{hoverDistance !== 1 && "s"} ({hoverDistance * FEET_PER_CELL} pies)
+              </strong>
+            )}
           </p>
           {notice && <p className={styles.notice}>{notice}</p>}
 
@@ -679,21 +718,24 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
               targetStats={statsOf(target)}
               onLog={appendLog}
               onResolve={async (text, damage) => {
+                let finalText = text;
                 if (damage > 0) {
                   const targetCharacter = characterOf(target);
                   if (targetCharacter) {
-                    await updateCharacter(targetCharacter.id, {
-                      currentHp: Math.max(0, targetCharacter.currentHp - damage),
-                    });
+                    const newHp = Math.max(0, targetCharacter.currentHp - damage);
+                    await updateCharacter(targetCharacter.id, { currentHp: newHp });
+                    if (newHp === 0 && targetCharacter.currentHp > 0) {
+                      finalText += ` 😵 ¡${target.name} cae inconsciente! Le tocan salvaciones de muerte.`;
+                    }
                   } else {
-                    await setBoardTokenHp(
-                      campaign.id,
-                      target.id,
-                      Math.max(0, (target.hp ?? 0) - damage)
-                    );
+                    const newHp = Math.max(0, (target.hp ?? 0) - damage);
+                    await setBoardTokenHp(campaign.id, target.id, newHp);
+                    if (newHp === 0 && (target.hp ?? 0) > 0) {
+                      finalText += ` ☠ ${target.name} cae.`;
+                    }
                   }
                 }
-                await appendLog(text);
+                await appendLog(finalText);
                 setCombat(null);
                 setSelectedId(null);
               }}
@@ -706,12 +748,17 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
               className={styles.boardInner}
               style={{ width: map.width * CELL, height: map.height * CELL }}
               onClick={handleBoardClick}
+              onMouseMove={handleBoardMouseMove}
+              onMouseLeave={() => setHoverCell(null)}
             >
               <canvas ref={canvasRef} className={styles.canvas} />
               <canvas ref={overlayRef} className={styles.canvas} />
               {visibleTokens.map((token) => {
                 const stats = statsOf(token);
-                const dead = stats.maxHp > 0 && stats.hp <= 0;
+                const down = stats.maxHp > 0 && stats.hp <= 0;
+                // Los enemigos a 0 PG mueren; los personajes caen inconscientes
+                const dead = down && !token.characterId;
+                const unconscious = down && Boolean(token.characterId);
                 const hidden = isDM && hiddenFromPlayers(token);
                 // Retrato: avatar del personaje (jugadores) o ilustración del bestiario
                 const portrait = characterOf(token)?.avatar || token.image;
@@ -722,9 +769,9 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
                     className={[
                       styles.token,
                       selectedId === token.id ? styles.tokenSelected : "",
-                      activeTokenId === token.id && !dead ? styles.tokenActive : "",
+                      activeTokenId === token.id && !down ? styles.tokenActive : "",
                       canMove(token) ? styles.tokenMovable : "",
-                      dead ? styles.tokenDead : "",
+                      down ? styles.tokenDead : "",
                       hidden ? styles.tokenHidden : "",
                     ].join(" ")}
                     style={{
@@ -734,10 +781,10 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
                         ? `${token.color} url(${portrait}) center / cover`
                         : token.color,
                     }}
-                    title={`${token.name}${stats.maxHp > 0 ? ` · ${stats.hp}/${stats.maxHp} PG · CA ${stats.ac} · ${stats.speed} pies` : ""}${conditions.length > 0 ? ` · ${conditions.join(", ")}` : ""}${hidden ? " · 🕶 oculto para los jugadores" : ""}`}
+                    title={`${token.name}${stats.maxHp > 0 ? ` · ${stats.hp}/${stats.maxHp} PG · CA ${stats.ac} · ${stats.speed} pies` : ""}${unconscious ? " · 😵 inconsciente: salvaciones de muerte en su ficha" : ""}${conditions.length > 0 ? ` · ${conditions.join(", ")}` : ""}${hidden ? " · 🕶 oculto para los jugadores" : ""}`}
                   >
-                    {dead ? "✕" : portrait ? "" : initials(token.name)}
-                    {stats.maxHp > 0 && !dead && (
+                    {dead ? "✕" : unconscious ? "😵" : portrait ? "" : initials(token.name)}
+                    {stats.maxHp > 0 && !down && (
                       <span
                         className={styles.hpBar}
                         style={{ width: `${Math.max(0, Math.min(100, (stats.hp / stats.maxHp) * 100))}%` }}

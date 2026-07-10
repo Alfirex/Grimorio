@@ -47,6 +47,10 @@
   margin: 0.6rem 0;
 }
 
+.distance {
+  color: $color-gold-light;
+}
+
 .scroll {
   @include scrollbar-thin;
   border: 1px solid $color-border;

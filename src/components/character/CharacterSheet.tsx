@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import {
+  appendBoardLog,
   deleteCharacter,
   subscribeCampaign,
   subscribeCharacter,
@@ -57,6 +58,7 @@ export function CharacterSheet({ characterId }: { characterId: string }) {
   const [myCampaigns, setMyCampaigns] = useState<Campaign[]>([]);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [lastRoll, setLastRoll] = useState<{ section: string; text: string } | null>(null);
   const loadedRef = useRef(false);
 
   // Carga inicial: solo el primer snapshot para no pisar la edición en curso
@@ -119,6 +121,29 @@ export function CharacterSheet({ characterId }: { characterId: string }) {
 
   const profBonus = proficiencyBonus(character.level);
   const chosenDeity = DEITIES.find((deity) => deity.name === character.deity);
+
+  /**
+   * Tirada de d20 + bono (salvaciones, habilidades…). Se muestra en la ficha
+   * y, si el personaje está en una campaña, queda en su registro para todos.
+   */
+  const rollCheck = async (section: "saves" | "skills", label: string, bonus: number) => {
+    const d20 = 1 + Math.floor(Math.random() * 20);
+    const total = d20 + bonus;
+    const flourish = d20 === 20 ? " ¡20 natural!" : d20 === 1 ? " (1 natural…)" : "";
+    const text = `🎲 ${character.name || "PJ"} tira ${label}: ${d20}${
+      bonus !== 0 ? formatModifier(bonus) : ""
+    } = ${total}${flourish}`;
+    setLastRoll({ section, text });
+    if (currentCampaign) {
+      await appendBoardLog(currentCampaign.id, currentCampaign.boardLog ?? [], text);
+    }
+  };
+
+  const logToCampaign = async (text: string) => {
+    if (currentCampaign) {
+      await appendBoardLog(currentCampaign.id, currentCampaign.boardLog ?? [], text);
+    }
+  };
 
   return (
     <div className={styles.sheet}>
@@ -393,13 +418,28 @@ export function CharacterSheet({ characterId }: { characterId: string }) {
                         }
                       />
                       <span className={styles.checkLabel}>{ABILITY_LABELS[key]}</span>
-                      <span className={styles.checkBonus}>
-                        {formatModifier(savingThrowBonus(character, key))}
-                      </span>
+                      <button
+                        type="button"
+                        className={styles.rollBtn}
+                        title={`Tirar salvación de ${ABILITY_LABELS[key]} (d20 ${formatModifier(savingThrowBonus(character, key))})`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          rollCheck(
+                            "saves",
+                            `salvación de ${ABILITY_LABELS[key]}`,
+                            savingThrowBonus(character, key)
+                          );
+                        }}
+                      >
+                        {formatModifier(savingThrowBonus(character, key))} 🎲
+                      </button>
                     </label>
                   </li>
                 ))}
               </ul>
+              {lastRoll?.section === "saves" && (
+                <p className={styles.rollResult}>{lastRoll.text}</p>
+              )}
             </section>
 
             {/* ---------- Habilidades ---------- */}
@@ -451,14 +491,24 @@ export function CharacterSheet({ characterId }: { characterId: string }) {
                           {skill.label}
                           <em className={styles.abilityTag}>{skill.ability.toUpperCase()}</em>
                         </span>
-                        <span className={styles.checkBonus}>
-                          {formatModifier(skillBonus(character, skill.id))}
-                        </span>
+                        <button
+                          type="button"
+                          className={styles.rollBtn}
+                          title={`Tirar ${skill.label} (d20 ${formatModifier(skillBonus(character, skill.id))})`}
+                          onClick={() =>
+                            rollCheck("skills", skill.label, skillBonus(character, skill.id))
+                          }
+                        >
+                          {formatModifier(skillBonus(character, skill.id))} 🎲
+                        </button>
                       </div>
                     </li>
                   );
                 })}
               </ul>
+              {lastRoll?.section === "skills" && (
+                <p className={styles.rollResult}>{lastRoll.text}</p>
+              )}
               <p className={styles.passive}>
                 Percepción pasiva: <strong>{passivePerception(character)}</strong>
               </p>
@@ -549,7 +599,7 @@ export function CharacterSheet({ characterId }: { characterId: string }) {
                 />
               </div>
 
-              <DeathSavesEditor character={character} onChange={set} />
+              <DeathSavesEditor character={character} onChange={set} onLog={logToCampaign} />
 
               {isOwner && <RestButtons character={character} onChange={set} />}
             </section>
@@ -749,10 +799,43 @@ export function CharacterSheet({ characterId }: { characterId: string }) {
 function DeathSavesEditor({
   character,
   onChange,
+  onLog,
 }: {
   character: Character;
   onChange: (patch: Partial<Character>) => void;
+  onLog: (text: string) => Promise<void>;
 }) {
+  const [result, setResult] = useState("");
+  const dying = character.currentHp <= 0;
+
+  /** Tirada de salvación de muerte: 20 = 1 PG, 1 = dos fallos, 10+ = éxito. */
+  const rollDeathSave = async () => {
+    const d20 = 1 + Math.floor(Math.random() * 20);
+    const saves = character.deathSaves;
+    let outcome: string;
+    if (d20 === 20) {
+      onChange({ currentHp: 1, deathSaves: { successes: 0, failures: 0 } });
+      outcome = "¡20 natural! Recupera 1 PG y despierta";
+    } else if (d20 === 1) {
+      const failures = Math.min(3, saves.failures + 2);
+      onChange({ deathSaves: { ...saves, failures } });
+      outcome =
+        failures >= 3 ? `1 natural: dos fallos (${failures}/3)… ha muerto` : `1 natural: dos fallos (${failures}/3)`;
+    } else if (d20 >= 10) {
+      const successes = Math.min(3, saves.successes + 1);
+      onChange({ deathSaves: { ...saves, successes } });
+      outcome =
+        successes >= 3 ? `éxito (${successes}/3): ¡se estabiliza!` : `éxito (${successes}/3)`;
+    } else {
+      const failures = Math.min(3, saves.failures + 1);
+      onChange({ deathSaves: { ...saves, failures } });
+      outcome = failures >= 3 ? `fallo (${failures}/3)… ha muerto` : `fallo (${failures}/3)`;
+    }
+    const text = `💀 ${character.name || "PJ"} tira salvación de muerte: 🎲${d20} — ${outcome}`;
+    setResult(text);
+    await onLog(text);
+  };
+
   const renderChecks = (kind: "successes" | "failures", label: string) => (
     <div className={styles.deathRow}>
       <span className="field-label">{label}</span>
@@ -779,6 +862,17 @@ function DeathSavesEditor({
       <span className="field-label">Salvaciones de muerte</span>
       {renderChecks("successes", "Éxitos")}
       {renderChecks("failures", "Fallos")}
+      {dying && (
+        <button
+          type="button"
+          className="btn btn--sm"
+          title="d20: 10+ éxito · 1-9 fallo · 20 despiertas con 1 PG · 1 dos fallos"
+          onClick={rollDeathSave}
+        >
+          💀 Tirar salvación de muerte
+        </button>
+      )}
+      {result && <p className={styles.rollResult}>{result}</p>}
     </div>
   );
 }
