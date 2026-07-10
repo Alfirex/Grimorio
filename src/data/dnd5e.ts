@@ -357,6 +357,60 @@ export function xpForNextLevel(level: number): number | null {
   return level >= 20 ? null : XP_THRESHOLDS[level];
 }
 
+export interface GearDef {
+  name: string;
+  /** Peso en libras por unidad. */
+  weight: number;
+}
+
+/** Equipo habitual del Manual del Jugador, para autocompletar el inventario. */
+export const GEAR: GearDef[] = [
+  { name: "Mochila", weight: 5 },
+  { name: "Saco de dormir", weight: 7 },
+  { name: "Raciones (1 día)", weight: 2 },
+  { name: "Odre de agua", weight: 5 },
+  { name: "Cuerda de cáñamo (50 pies)", weight: 10 },
+  { name: "Antorcha", weight: 1 },
+  { name: "Yesquero", weight: 1 },
+  { name: "Lámpara", weight: 1 },
+  { name: "Aceite (frasco)", weight: 1 },
+  { name: "Ganzúas", weight: 1 },
+  { name: "Kit de ladrón", weight: 1 },
+  { name: "Kit de curación", weight: 3 },
+  { name: "Poción de curación", weight: 0.5 },
+  { name: "Palanca", weight: 5 },
+  { name: "Martillo", weight: 3 },
+  { name: "Pitón", weight: 0.25 },
+  { name: "Espejo de acero", weight: 0.5 },
+  { name: "Caltrops (bolsa)", weight: 2 },
+  { name: "Daga", weight: 1 },
+  { name: "Espada corta", weight: 2 },
+  { name: "Espada larga", weight: 3 },
+  { name: "Gran hacha", weight: 7 },
+  { name: "Maza", weight: 4 },
+  { name: "Bastón", weight: 4 },
+  { name: "Arco corto", weight: 2 },
+  { name: "Arco largo", weight: 2 },
+  { name: "Ballesta ligera", weight: 5 },
+  { name: "Carcaj con 20 flechas", weight: 1 },
+  { name: "Escudo", weight: 6 },
+  { name: "Armadura de cuero", weight: 10 },
+  { name: "Armadura de cuero tachonado", weight: 13 },
+  { name: "Camisote de malla", weight: 20 },
+  { name: "Cota de malla", weight: 55 },
+  { name: "Símbolo sagrado", weight: 1 },
+  { name: "Bolsa de componentes", weight: 2 },
+  { name: "Foco arcano", weight: 1 },
+  { name: "Libro de conjuros", weight: 3 },
+  { name: "Tienda de campaña (2 personas)", weight: 20 },
+];
+
+/** Peso conocido de un objeto del equipo estándar. */
+export function gearWeight(name: string): number | undefined {
+  const normalized = name.trim().toLowerCase();
+  return GEAR.find((item) => item.name.toLowerCase() === normalized)?.weight;
+}
+
 export interface ConditionDef {
   label: string;
   emoji: string;

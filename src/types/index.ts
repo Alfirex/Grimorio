@@ -45,6 +45,18 @@ export interface Money {
   pp: number;
 }
 
+/** Objeto del inventario estructurado. */
+export interface InventoryItem {
+  id: string;
+  name: string;
+  quantity: number;
+  /** Peso por unidad, en libras. */
+  weight: number;
+  notes: string;
+  /** Marcado si lo lleva puesto o en la mano (armadura, armas…). */
+  equipped: boolean;
+}
+
 export interface Character {
   id: string;
   ownerUid: string;
@@ -93,6 +105,8 @@ export interface Character {
   // Equipo
   money: Money;
   equipment: string;
+  /** Inventario estructurado; el texto libre de `equipment` es el formato antiguo. */
+  inventory?: InventoryItem[];
 
   // Personalidad e historia
   personality: string;

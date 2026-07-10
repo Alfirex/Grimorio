@@ -5,6 +5,7 @@ import {
   formatModifier,
   hitDieForClass,
   initiativeTotal,
+  parseEquipmentText,
   passivePerception,
   proficiencyBonus,
   savingThrowBonus,
@@ -87,6 +88,35 @@ describe("conjuros", () => {
     };
     expect(spellSaveDC(character)).toBe(15);
     expect(spellAttackBonus(character)).toBe(7);
+  });
+});
+
+describe("parseEquipmentText", () => {
+  it("separa por comas, puntos y comas y saltos de línea", () => {
+    expect(parseEquipmentText("Mochila, cuerda; antorcha\nyesquero")).toEqual([
+      { name: "Mochila", quantity: 1 },
+      { name: "cuerda", quantity: 1 },
+      { name: "antorcha", quantity: 1 },
+      { name: "yesquero", quantity: 1 },
+    ]);
+  });
+
+  it("detecta cantidades al principio y al final", () => {
+    expect(parseEquipmentText("10 antorchas, raciones x5, pociones ×2")).toEqual([
+      { name: "antorchas", quantity: 10 },
+      { name: "raciones", quantity: 5 },
+      { name: "pociones", quantity: 2 },
+    ]);
+  });
+
+  it("ignora entradas vacías y puntos finales", () => {
+    expect(parseEquipmentText("  , Mochila. ,\n\n")).toEqual([
+      { name: "Mochila", quantity: 1 },
+    ]);
+  });
+
+  it("con texto vacío no devuelve nada", () => {
+    expect(parseEquipmentText("")).toEqual([]);
   });
 });
 

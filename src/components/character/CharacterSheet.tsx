@@ -20,6 +20,8 @@ import {
   BACKGROUNDS,
   CLASSES,
   DEITIES,
+  GEAR,
+  gearWeight,
   levelForXp,
   RACE_DETAILS,
   RACES,
@@ -40,6 +42,7 @@ import {
   formatModifier,
   hitDieForClass,
   initiativeTotal,
+  parseEquipmentText,
   passivePerception,
   proficiencyBonus,
   savingThrowBonus,
@@ -48,7 +51,7 @@ import {
   spellSaveDC,
 } from "@/utils/character";
 import { fileToAvatar } from "@/utils/image";
-import type { AbilityKey, Campaign, Character } from "@/types";
+import type { AbilityKey, Campaign, Character, InventoryItem } from "@/types";
 import { NotesPanel } from "./NotesPanel";
 import styles from "./CharacterSheet.module.scss";
 
@@ -736,13 +739,7 @@ export function CharacterSheet({ characterId }: { characterId: string }) {
                   </label>
                 ))}
               </div>
-              <textarea
-                className="input"
-                rows={5}
-                placeholder="Mochila, armadura, cuerda, antorchas…"
-                value={character.equipment}
-                onChange={(e) => set({ equipment: e.target.value })}
-              />
+              <InventoryEditor character={character} onChange={set} isOwner={isOwner} />
             </section>
           </div>
         </div>
@@ -1303,6 +1300,205 @@ function RestButtons({
         🌙 Descanso largo
       </button>
       {lastRoll && <span className={styles.restNote}>{lastRoll}</span>}
+    </div>
+  );
+}
+
+/**
+ * Inventario estructurado: objetos con cantidad, peso y notas, carga total
+ * contra la capacidad (FUE × 15 lb) y conversión del texto libre antiguo.
+ */
+function InventoryEditor({
+  character,
+  onChange,
+  isOwner,
+}: {
+  character: Character;
+  onChange: (patch: Partial<Character>) => void;
+  isOwner: boolean;
+}) {
+  const [newName, setNewName] = useState("");
+  const [newQty, setNewQty] = useState("1");
+
+  const inventory = character.inventory ?? [];
+  const totalWeight = inventory.reduce((sum, item) => sum + item.quantity * item.weight, 0);
+  const capacity = character.abilities.str * 15;
+  const overloaded = totalWeight > capacity;
+
+  const updateItem = (id: string, patch: Partial<InventoryItem>) => {
+    onChange({
+      inventory: inventory.map((item) => (item.id === id ? { ...item, ...patch } : item)),
+    });
+  };
+
+  const handleAdd = () => {
+    if (!newName.trim()) return;
+    onChange({
+      inventory: [
+        ...inventory,
+        {
+          id: crypto.randomUUID(),
+          name: newName.trim(),
+          quantity: Math.max(1, parseInt(newQty, 10) || 1),
+          weight: gearWeight(newName) ?? 0,
+          notes: "",
+          equipped: false,
+        },
+      ],
+    });
+    setNewName("");
+    setNewQty("1");
+  };
+
+  /** Migra el texto libre antiguo a objetos, con pesos conocidos rellenados. */
+  const handleConvert = () => {
+    const parsed = parseEquipmentText(character.equipment);
+    if (parsed.length === 0) return;
+    onChange({
+      inventory: [
+        ...inventory,
+        ...parsed.map(({ name, quantity }) => ({
+          id: crypto.randomUUID(),
+          name,
+          quantity,
+          weight: gearWeight(name) ?? 0,
+          notes: "",
+          equipped: false,
+        })),
+      ],
+      equipment: "",
+    });
+  };
+
+  return (
+    <div className={styles.inventory}>
+      {inventory.length > 0 && (
+        <>
+          <div className={styles.inventoryHead}>
+            <span />
+            <span className="field-label">Objeto</span>
+            <span className="field-label">Cant.</span>
+            <span className="field-label">Peso lb</span>
+            <span className="field-label">Notas</span>
+            <span />
+          </div>
+          {inventory.map((item) => (
+            <div key={item.id} className={styles.inventoryRow}>
+              <input
+                type="checkbox"
+                title="Equipado (puesto o en la mano)"
+                checked={item.equipped}
+                onChange={(e) => updateItem(item.id, { equipped: e.target.checked })}
+              />
+              <input
+                className="input"
+                value={item.name}
+                onChange={(e) => updateItem(item.id, { name: e.target.value })}
+              />
+              <input
+                className="input"
+                type="number"
+                min={1}
+                title="Cantidad"
+                value={item.quantity}
+                onChange={(e) =>
+                  updateItem(item.id, { quantity: clampInt(e.target.value, 1, 999) })
+                }
+              />
+              <input
+                className="input"
+                type="number"
+                min={0}
+                step={0.25}
+                title="Peso por unidad, en libras"
+                value={item.weight}
+                onChange={(e) =>
+                  updateItem(item.id, {
+                    weight: Math.max(0, parseFloat(e.target.value) || 0),
+                  })
+                }
+              />
+              <input
+                className="input"
+                placeholder="—"
+                value={item.notes}
+                onChange={(e) => updateItem(item.id, { notes: e.target.value })}
+              />
+              {isOwner && (
+                <button
+                  type="button"
+                  className="btn btn--danger btn--sm"
+                  onClick={() =>
+                    onChange({ inventory: inventory.filter((i) => i.id !== item.id) })
+                  }
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          ))}
+          <p className={`${styles.load} ${overloaded ? styles.overloaded : ""}`}>
+            Carga: {totalWeight % 1 === 0 ? totalWeight : totalWeight.toFixed(2)} / {capacity} lb
+            (FUE × 15){overloaded && " · ¡Sobrecargado!"}
+          </p>
+        </>
+      )}
+
+      {isOwner && (
+        <div className={styles.inventoryAdd}>
+          <input
+            className="input"
+            list="gear-presets"
+            placeholder="Cuerda de cáñamo (50 pies)…"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleAdd();
+              }
+            }}
+          />
+          <datalist id="gear-presets">
+            {GEAR.map((item) => (
+              <option key={item.name} value={item.name} />
+            ))}
+          </datalist>
+          <input
+            className={`input ${styles.smallInput}`}
+            type="number"
+            min={1}
+            title="Cantidad"
+            value={newQty}
+            onChange={(e) => setNewQty(e.target.value)}
+          />
+          <button type="button" className="btn btn--sm" disabled={!newName.trim()} onClick={handleAdd}>
+            + Añadir
+          </button>
+        </div>
+      )}
+
+      {character.equipment.trim() && (
+        <div className={styles.legacyEquipment}>
+          <span className="field-label">Equipo en texto (formato antiguo)</span>
+          <textarea
+            className="input"
+            rows={3}
+            value={character.equipment}
+            onChange={(e) => onChange({ equipment: e.target.value })}
+          />
+          {isOwner && (
+            <button
+              type="button"
+              className="btn btn--sm"
+              title="Separa por comas o líneas y crea un objeto por entrada, con cantidades (x3, 10 antorchas) y pesos conocidos"
+              onClick={handleConvert}
+            >
+              ⤵ Convertir en objetos
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

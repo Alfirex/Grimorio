@@ -59,6 +59,24 @@ export function hitDieForClass(className: string): number {
   return CLASSES.find((c) => c.name === className)?.hitDie ?? 8;
 }
 
+/**
+ * Convierte el texto libre de equipo ("10 antorchas, cuerda, raciones x5")
+ * en objetos con cantidad, separando por comas, puntos y comas o saltos de línea.
+ */
+export function parseEquipmentText(text: string): Array<{ name: string; quantity: number }> {
+  return text
+    .split(/[\n,;]/)
+    .map((chunk) => chunk.trim().replace(/[.·]$/, ""))
+    .filter(Boolean)
+    .map((chunk) => {
+      const trailing = chunk.match(/^(.+?)\s*[x×]\s*(\d+)$/i);
+      if (trailing) return { name: trailing[1].trim(), quantity: parseInt(trailing[2], 10) };
+      const leading = chunk.match(/^(\d+)\s+(.+)$/);
+      if (leading) return { name: leading[2].trim(), quantity: parseInt(leading[1], 10) };
+      return { name: chunk, quantity: 1 };
+    });
+}
+
 export function createBlankCharacter(ownerUid: string, ownerName: string): Omit<Character, "id"> {
   const now = Date.now();
   return {
@@ -96,6 +114,7 @@ export function createBlankCharacter(ownerUid: string, ownerName: string): Omit<
     spells: [],
     money: { cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 },
     equipment: "",
+    inventory: [],
     personality: "",
     ideals: "",
     bonds: "",
