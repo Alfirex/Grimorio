@@ -95,6 +95,36 @@ describe("generateDungeon", () => {
     }
   });
 
+  it("las formas de sala son deterministas y todo queda conectado", () => {
+    for (const roomShapes of ["mixed", "round", "poly"] as const) {
+      const a = generateDungeon({ ...OPTIONS, roomShapes });
+      const b = generateDungeon({ ...OPTIONS, roomShapes });
+      expect(a.grid, roomShapes).toEqual(b.grid);
+      expect(walkableIsConnected(a), roomShapes).toBe(true);
+      // El centro de cada sala está tallado: es el ancla de los pasillos
+      for (const room of a.rooms) {
+        const cx = Math.round(room.x + (room.w - 1) / 2);
+        const cy = Math.round(room.y + (room.h - 1) / 2);
+        expect(a.grid[cy][cx], `${roomShapes} centro`).not.toBe("wall");
+      }
+    }
+  });
+
+  it("el modo rect reproduce exactamente la generación clásica", () => {
+    const classic = generateDungeon(OPTIONS);
+    const explicit = generateDungeon({ ...OPTIONS, roomShapes: "rect" });
+    expect(explicit.grid).toEqual(classic.grid);
+    expect(explicit.rooms).toEqual(classic.rooms);
+  });
+
+  it("admite una sala única", () => {
+    for (const roomShapes of ["rect", "round", "poly"] as const) {
+      const map = generateDungeon({ ...OPTIONS, roomAttempts: 1, roomShapes });
+      expect(map.rooms, roomShapes).toHaveLength(1);
+      expect(walkableIsConnected(map), roomShapes).toBe(true);
+    }
+  });
+
   it("las puertas separan pasillos de salas", () => {
     const map = generateDungeon(OPTIONS);
     for (let y = 1; y < map.height - 1; y++) {

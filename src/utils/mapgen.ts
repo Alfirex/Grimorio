@@ -1,5 +1,8 @@
 export type Cell = "wall" | "floor" | "door" | "corridor";
 
+/** Estilo de las salas: clásicas, redondeadas, poligonales o una mezcla. */
+export type RoomShapeMode = "rect" | "round" | "poly" | "mixed";
+
 export interface Room {
   x: number;
   y: number;
@@ -22,6 +25,11 @@ export interface DungeonOptions {
   minRoomSize: number;
   maxRoomSize: number;
   seed?: number;
+  /**
+   * Forma de las salas. "rect" (por defecto) mantiene la generación clásica
+   * y reproduce exactamente los mapas antiguos con la misma semilla.
+   */
+  roomShapes?: RoomShapeMode;
 }
 
 /** PRNG determinista (mulberry32) para poder regenerar el mismo mapa con una semilla. */
@@ -50,6 +58,90 @@ function carveRoom(grid: Cell[][], room: Room): void {
     for (let x = room.x; x < room.x + room.w; x++) {
       grid[y][x] = "floor";
     }
+  }
+}
+
+/** Sala elíptica inscrita en su caja: círculos y óvalos. */
+function carveEllipse(grid: Cell[][], room: Room): void {
+  const cx = room.x + (room.w - 1) / 2;
+  const cy = room.y + (room.h - 1) / 2;
+  const rx = (room.w - 1) / 2 + 0.45;
+  const ry = (room.h - 1) / 2 + 0.45;
+  for (let y = room.y; y < room.y + room.h; y++) {
+    for (let x = room.x; x < room.x + room.w; x++) {
+      const nx = (x - cx) / rx;
+      const ny = (y - cy) / ry;
+      if (nx * nx + ny * ny <= 1) grid[y][x] = "floor";
+    }
+  }
+}
+
+/** ¿Está el punto dentro del polígono? (ray casting). */
+function pointInPolygon(px: number, py: number, vertices: Array<[number, number]>): boolean {
+  let inside = false;
+  for (let i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {
+    const [xi, yi] = vertices[i];
+    const [xj, yj] = vertices[j];
+    if (yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) {
+      inside = !inside;
+    }
+  }
+  return inside;
+}
+
+/** Sala poligonal regular (pentágonos, hexágonos, octógonos) con giro aleatorio. */
+function carvePolygon(grid: Cell[][], room: Room, sides: number, rotation: number): void {
+  const cx = room.x + (room.w - 1) / 2;
+  const cy = room.y + (room.h - 1) / 2;
+  const rx = (room.w - 1) / 2 + 0.6;
+  const ry = (room.h - 1) / 2 + 0.6;
+  const vertices: Array<[number, number]> = Array.from({ length: sides }, (_, i) => {
+    const angle = rotation + (i * 2 * Math.PI) / sides;
+    return [cx + rx * Math.cos(angle), cy + ry * Math.sin(angle)];
+  });
+  for (let y = room.y; y < room.y + room.h; y++) {
+    for (let x = room.x; x < room.x + room.w; x++) {
+      if (pointInPolygon(x, y, vertices)) grid[y][x] = "floor";
+    }
+  }
+  // El centro siempre queda tallado: es el ancla de los pasillos
+  grid[Math.round(cy)][Math.round(cx)] = "floor";
+}
+
+/**
+ * Talla la sala según el modo elegido. Solo consume aleatoriedad cuando el
+ * modo no es "rect", para no alterar los mapas antiguos con la misma semilla.
+ */
+function carveShapedRoom(
+  grid: Cell[][],
+  room: Room,
+  mode: RoomShapeMode,
+  rand: () => number
+): void {
+  if (mode === "rect") {
+    carveRoom(grid, room);
+    return;
+  }
+  const roll = rand();
+  const sidesRoll = rand();
+  const rotationRoll = rand();
+
+  let shape: "rect" | "ellipse" | "polygon";
+  if (mode === "round") shape = "ellipse";
+  else if (mode === "poly") shape = "polygon";
+  else shape = roll < 0.34 ? "rect" : roll < 0.67 ? "ellipse" : "polygon";
+
+  // Las formas necesitan sitio para leerse: las salas pequeñas se redondean
+  if (shape === "polygon" && Math.min(room.w, room.h) < 6) shape = "ellipse";
+  if (shape === "ellipse" && Math.min(room.w, room.h) < 4) shape = "rect";
+
+  if (shape === "rect") {
+    carveRoom(grid, room);
+  } else if (shape === "ellipse") {
+    carveEllipse(grid, room);
+  } else {
+    const sides = [5, 5, 6, 8][Math.floor(sidesRoll * 4)];
+    carvePolygon(grid, room, sides, rotationRoll * Math.PI * 2);
   }
 }
 
@@ -86,6 +178,7 @@ function placeDoors(grid: Cell[][], width: number, height: number): void {
 
 export function generateDungeon(options: DungeonOptions): DungeonMap {
   const { width, height, roomAttempts, minRoomSize, maxRoomSize } = options;
+  const shapeMode = options.roomShapes ?? "rect";
   const seed = options.seed ?? Math.floor(Math.random() * 2 ** 31);
   const rand = mulberry32(seed);
 
@@ -102,7 +195,7 @@ export function generateDungeon(options: DungeonOptions): DungeonMap {
     const candidate: Room = { x, y, w, h };
     if (!rooms.some((r) => roomsOverlap(r, candidate))) {
       rooms.push(candidate);
-      carveRoom(grid, candidate);
+      carveShapedRoom(grid, candidate, shapeMode, rand);
     }
   }
 

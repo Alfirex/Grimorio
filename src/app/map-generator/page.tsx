@@ -5,7 +5,7 @@ import Link from "next/link";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { useAuth } from "@/context/AuthContext";
 import { setCampaignBoard, subscribeMyCampaigns } from "@/lib/db";
-import { generateDungeon, type DungeonMap } from "@/utils/mapgen";
+import { generateDungeon, type DungeonMap, type RoomShapeMode } from "@/utils/mapgen";
 import { DEFAULT_THEME, renderDungeon, THEMES } from "@/utils/renderDungeon";
 import type { BoardConfig, Campaign } from "@/types";
 import styles from "./page.module.scss";
@@ -41,13 +41,15 @@ function MapGenerator() {
   const [maxRoomSize, setMaxRoomSize] = useState(DEFAULT_OPTIONS.maxRoomSize);
   const [seedInput, setSeedInput] = useState(String(INITIAL_SEED));
   const [theme, setTheme] = useState(DEFAULT_THEME);
+  const [roomShapes, setRoomShapes] = useState<RoomShapeMode>("mixed");
   // Parámetros exactos del mapa mostrado, para poder usarlo como tablero
   const [boardConfig, setBoardConfig] = useState<BoardConfig>({
     ...DEFAULT_OPTIONS,
     seed: INITIAL_SEED,
+    roomShapes: "mixed",
   });
   const [map, setMap] = useState<DungeonMap>(() =>
-    generateDungeon({ ...DEFAULT_OPTIONS, seed: INITIAL_SEED })
+    generateDungeon({ ...DEFAULT_OPTIONS, seed: INITIAL_SEED, roomShapes: "mixed" })
   );
 
   const generate = useCallback(
@@ -58,13 +60,14 @@ function MapGenerator() {
         roomAttempts,
         minRoomSize: Math.min(minRoomSize, maxRoomSize),
         maxRoomSize: Math.max(minRoomSize, maxRoomSize),
+        roomShapes,
       };
       const dungeon = generateDungeon({ ...options, seed });
       setMap(dungeon);
       setSeedInput(String(dungeon.seed));
       setBoardConfig({ ...options, seed: dungeon.seed });
     },
-    [width, height, roomAttempts, minRoomSize, maxRoomSize]
+    [width, height, roomAttempts, minRoomSize, maxRoomSize, roomShapes]
   );
 
   useEffect(() => {
@@ -100,8 +103,8 @@ function MapGenerator() {
           <Control label={`Alto: ${height}`}>
             <input type="range" min={20} max={90} value={height} onChange={(e) => setHeight(+e.target.value)} />
           </Control>
-          <Control label={`Densidad de salas: ${roomAttempts}`}>
-            <input type="range" min={4} max={50} value={roomAttempts} onChange={(e) => setRoomAttempts(+e.target.value)} />
+          <Control label={`Densidad de salas: ${roomAttempts}${roomAttempts === 1 ? " (sala única)" : ""}`}>
+            <input type="range" min={1} max={50} value={roomAttempts} onChange={(e) => setRoomAttempts(+e.target.value)} />
           </Control>
           <Control label={`Sala mínima: ${minRoomSize}`}>
             <input type="range" min={3} max={12} value={minRoomSize} onChange={(e) => setMinRoomSize(+e.target.value)} />
@@ -109,6 +112,20 @@ function MapGenerator() {
           <Control label={`Sala máxima: ${maxRoomSize}`}>
             <input type="range" min={4} max={20} value={maxRoomSize} onChange={(e) => setMaxRoomSize(+e.target.value)} />
           </Control>
+
+          <label>
+            <span className="field-label">Forma de las salas</span>
+            <select
+              className="input"
+              value={roomShapes}
+              onChange={(e) => setRoomShapes(e.target.value as RoomShapeMode)}
+            >
+              <option value="mixed">Variadas (mezcla)</option>
+              <option value="rect">Rectangulares</option>
+              <option value="round">Redondeadas</option>
+              <option value="poly">Poligonales (pentágonos…)</option>
+            </select>
+          </label>
 
           <label>
             <span className="field-label">Ambientación</span>

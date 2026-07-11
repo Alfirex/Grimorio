@@ -85,21 +85,21 @@ $stones: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width
 }
 
 .tagline {
-  color: #b3a68e;
-  font-size: 0.85rem;
+  color: #e6dabc;
+  font-size: 0.92rem;
   font-style: italic;
   max-width: 26rem;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
 }
 
 .linksTitle {
-  color: rgba($color-gold, 0.85);
+  color: $color-gold-light;
   display: block;
   font-family: $font-display;
   font-size: 0.72rem;
   letter-spacing: 0.14em;
   margin-bottom: 0.5rem;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.7);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
   text-transform: uppercase;
 }
 
@@ -109,9 +109,9 @@ $stones: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width
   justify-items: start;
 
   a {
-    color: #cfc2a5;
-    font-size: 0.85rem;
-    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+    color: #ecdfc0;
+    font-size: 0.92rem;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
     transition: color $transition-fast;
 
     &:hover {
@@ -121,10 +121,10 @@ $stones: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width
 }
 
 .lockedNote {
-  color: #b3a68e;
-  font-size: 0.82rem;
+  color: #e6dabc;
+  font-size: 0.88rem;
   font-style: italic;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
 }
 
 .loginLink {
@@ -136,7 +136,7 @@ $stones: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width
   font-size: 0.85rem;
   padding: 0;
   text-align: left;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
   transition: color $transition-fast;
 
   &:hover {
@@ -147,10 +147,10 @@ $stones: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width
 
 .credits {
   p {
-    color: #b3a68e;
-    font-size: 0.82rem;
+    color: #e6dabc;
+    font-size: 0.9rem;
     margin-bottom: 0.2rem;
-    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
   }
 }
 
@@ -162,11 +162,11 @@ $stones: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width
   text-align: center;
 
   span {
-    color: rgba(207, 194, 165, 0.75);
+    color: #d8cbae;
     font-family: $font-display;
     font-size: 0.75rem;
     letter-spacing: 0.12em;
-    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.8);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
     text-transform: uppercase;
   }
 }
