@@ -50,10 +50,13 @@
 }
 
 .charName {
+  align-items: center;
   color: $color-cream;
+  display: flex;
   font-family: $font-display;
   font-size: 1.05rem;
   font-weight: 700;
+  gap: 0.5rem;
 }
 
 .charMeta {

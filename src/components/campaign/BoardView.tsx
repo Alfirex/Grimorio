@@ -137,6 +137,12 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
     return character?.ownerUid === user?.uid;
   };
 
+  /** Regla 5e: al recibir daño concentrado, CON CD 10 o mitad del daño. */
+  const concentrationNote = (token: BoardToken, damage: number): string =>
+    damage > 0 && (token.conditions ?? []).includes("Concentración")
+      ? ` 🎯 ${token.name} debe tirar CON CD ${Math.max(10, Math.floor(damage / 2))} o pierde la concentración.`
+      : "";
+
   /** Una puerta cerrada bloquea el paso como si fuera muro. */
   const isClosedDoor = (x: number, y: number): boolean =>
     map?.grid[y]?.[x] === "door" && !openDoors.has(`${x},${y}`);
@@ -715,7 +721,7 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
     await appendLog(
       sign > 0
         ? `✚ ${selectedToken.name} recupera ${amount} PG (${next}${stats.maxHp > 0 ? `/${stats.maxHp}` : ""}).`
-        : `💥 ${selectedToken.name} recibe ${amount} de daño (queda a ${next} PG).${fallNote}`
+        : `💥 ${selectedToken.name} recibe ${amount} de daño (queda a ${next} PG).${fallNote}${concentrationNote(selectedToken, amount)}`
     );
   };
 
@@ -825,6 +831,9 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
           if (character) await updateCharacter(character.id, { currentHp: newHp });
           else await setBoardTokenHp(campaign.id, token.id, newHp);
           if (newHp === 0 && stats.hp > 0) note = character ? " 😵" : " ☠";
+          if ((token.conditions ?? []).includes("Concentración")) {
+            note += ` 🎯CD ${Math.max(10, Math.floor(damage / 2))}`;
+          }
         } catch {
           note = " (aplicar a mano)";
         }
@@ -1314,6 +1323,7 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
                       finalText += ` ☠ ${target.name} cae.`;
                     }
                   }
+                  finalText += concentrationNote(target, damage);
                 }
                 await appendLog(finalText);
                 setCombat(null);

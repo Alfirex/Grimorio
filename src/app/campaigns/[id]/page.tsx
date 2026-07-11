@@ -40,21 +40,32 @@ function CampaignView({ campaignId }: { campaignId: string }) {
     };
   }, [campaignId]);
 
+  // Combatiente activo del encuentro; avisa cuando le toca a un personaje tuyo
+  const activeCombatant = campaign?.encounter
+    ? sortedCombatants(campaign.encounter)[campaign.encounter.turnIndex]
+    : null;
+  const myTurnCharacter = activeCombatant
+    ? characters.find(
+        (c) => c.id === activeCombatant.id && c.ownerUid === user?.uid
+      )
+    : null;
+  const myTurn = Boolean(myTurnCharacter);
+
+  // Con la pestaña en segundo plano, el título avisa de que te toca actuar
+  useEffect(() => {
+    document.title = myTurn
+      ? "⚔ ¡Tu turno! — Grimorio"
+      : "Grimorio — Gestor de partidas de D&D";
+    return () => {
+      document.title = "Grimorio — Gestor de partidas de D&D";
+    };
+  }, [myTurn]);
+
   if (campaign === undefined) return <p className={styles.info}>Consultando los archivos…</p>;
   if (campaign === null) return <p className={styles.info}>Esta campaña ya no existe.</p>;
   if (!user) return null;
 
   const isDM = campaign.dmUid === user.uid;
-
-  // Combatiente activo del encuentro; avisa cuando le toca a un personaje tuyo
-  const activeCombatant = campaign.encounter
-    ? sortedCombatants(campaign.encounter)[campaign.encounter.turnIndex]
-    : null;
-  const myTurnCharacter = activeCombatant
-    ? characters.find(
-        (c) => c.id === activeCombatant.id && c.ownerUid === user.uid
-      )
-    : null;
 
   const handleCopyCode = async () => {
     await navigator.clipboard.writeText(campaign.inviteCode);

@@ -12,6 +12,7 @@ import {
   subscribeMyCampaigns,
   subscribeMyCharacters,
 } from "@/lib/db";
+import { levelForXp } from "@/data/dnd5e";
 import { createBlankCharacter } from "@/utils/character";
 import type { Campaign, Character } from "@/types";
 import styles from "./page.module.scss";
@@ -128,7 +129,14 @@ function Dashboard() {
                 href={`/characters/${character.id}`}
                 className={`panel panel--interactive ${styles.charCard}`}
               >
-                <div className={styles.charName}>{character.name || "Sin nombre"}</div>
+                <div className={styles.charName}>
+                  {character.name || "Sin nombre"}
+                  {character.level < 20 && levelForXp(character.xp) > character.level && (
+                    <span className="badge" title="PX suficientes para subir de nivel">
+                      ⬆ Nivel {character.level + 1}
+                    </span>
+                  )}
+                </div>
                 <div className={styles.charMeta}>
                   {character.race} · {character.characterClass} nivel {character.level}
                 </div>

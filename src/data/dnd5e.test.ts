@@ -3,6 +3,8 @@ import {
   BACKGROUND_DETAILS,
   CONDITIONS,
   conditionEmoji,
+  GEAR,
+  gearWeight,
   inferAttackRange,
   levelForXp,
   RACE_DETAILS,
@@ -60,6 +62,23 @@ describe("condiciones", () => {
       expect(conditionEmoji(condition.label)).toBe(condition.emoji);
     }
     expect(conditionEmoji("Inventada")).toBe("❔");
+  });
+});
+
+describe("equipo estándar", () => {
+  it("sin nombres duplicados y con pesos válidos", () => {
+    const names = new Set(GEAR.map((item) => item.name));
+    expect(names.size).toBe(GEAR.length);
+    for (const item of GEAR) {
+      expect(item.weight, item.name).toBeGreaterThan(0);
+    }
+  });
+
+  it("gearWeight ignora mayúsculas y espacios; desconocidos sin peso", () => {
+    expect(gearWeight("Antorcha")).toBe(1);
+    expect(gearWeight("  antorcha ")).toBe(1);
+    expect(gearWeight("COTA DE MALLA")).toBe(55);
+    expect(gearWeight("Reliquia inventada")).toBeUndefined();
   });
 });
 
