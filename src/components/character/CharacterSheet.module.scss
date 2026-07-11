@@ -370,6 +370,17 @@
   }
 }
 
+.preparedCount {
+  color: $color-muted;
+  font-size: 0.75rem;
+  font-weight: 400;
+  text-transform: none;
+}
+
+.preparedOver {
+  color: $color-blood-light;
+}
+
 .spellHint {
   color: $color-muted;
   font-size: 0.8rem;

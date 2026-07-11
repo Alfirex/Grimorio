@@ -952,6 +952,25 @@ function SpellsSection({
     setNewSpellPick("");
   };
 
+  // Clases que preparan a diario: cuántos conjuros pueden tener preparados
+  const PREPARERS: Record<string, "full" | "half"> = {
+    Clérigo: "full",
+    Druida: "full",
+    Mago: "full",
+    Paladín: "half",
+  };
+  const prepared = (() => {
+    const mode = PREPARERS[character.characterClass];
+    if (!mode || !character.spellcastingAbility) return null;
+    const mod = abilityModifier(character.abilities[character.spellcastingAbility]);
+    const max = Math.max(
+      1,
+      (mode === "full" ? character.level : Math.floor(character.level / 2)) + mod
+    );
+    const current = character.spells.filter((s) => s.prepared && s.level > 0).length;
+    return { max, current };
+  })();
+
   /** Convierte un conjuro del grimorio en un ataque usable en el tablero. */
   const addSpellAsAttack = (spell: Spell) => {
     const bonus = spellAttackBonus(character);
@@ -1075,7 +1094,17 @@ function SpellsSection({
             ))}
           </div>
 
-          <h3 className={styles.subTitle}>Grimorio</h3>
+          <h3 className={styles.subTitle}>
+            Grimorio
+            {prepared && (
+              <span
+                className={`${styles.preparedCount} ${prepared.current > prepared.max ? styles.preparedOver : ""}`}
+                title={`Tu clase prepara a diario hasta ${prepared.max} conjuros (nivel ${PREPARERS[character.characterClass] === "half" ? "÷2 " : ""}+ modificador). Los trucos no cuentan.`}
+              >
+                · preparados {prepared.current}/{prepared.max}
+              </span>
+            )}
+          </h3>
           {SPELL_LEVEL_LABELS.map((label, level) => {
             const spells = character.spells.filter((s) => s.level === level);
             if (spells.length === 0) return null;
