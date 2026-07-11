@@ -1,9 +1,12 @@
-// Paleta "grimorio": fantasía oscura con acentos dorados y pergamino
-$color-ink: #16120d;
-$color-panel: #211a12;
-$color-panel-light: #2a2118;
-$color-border: #4a3826;
-$color-border-light: #6b5436;
+// Paleta "taberna": madera cálida, dorados y pergamino
+$color-ink: #1c1106;
+$color-panel: #2e1d0d;
+$color-panel-light: #3a2512;
+$color-border: #4a3218;
+$color-border-light: #6b4c28;
+$color-wood-frame: #241304;
+$color-wood-light: #6b4726;
+$color-wood-dark: #40270f;
 $color-gold: #c9a227;
 $color-gold-light: #e3c458;
 $color-blood: #8b1e1e;
@@ -21,3 +24,6 @@ $font-display: var(--font-cinzel), serif;
 $font-body: var(--font-alegreya), Georgia, serif;
 
 $transition-fast: 0.15s ease;
+
+// Grano sutil (feTurbulence) para madera y pergamino, sin imágenes externas
+$texture-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");

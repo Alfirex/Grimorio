@@ -1,11 +1,24 @@
+@use "sass:color";
 @use "variables" as *;
 
-// Panel con borde ornamental dorado, base de todas las tarjetas
+// Panel de madera de taberna: veta, grano y brillo tallado arriba
 @mixin panel {
-  background: linear-gradient(160deg, $color-panel 0%, $color-panel-light 100%);
-  border: 1px solid $color-border;
+  background:
+    $texture-noise,
+    repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.08) 0,
+      rgba(0, 0, 0, 0.08) 2px,
+      transparent 2px,
+      transparent 10px
+    ),
+    linear-gradient(170deg, $color-panel-light 0%, $color-panel 55%, color.adjust($color-panel, $lightness: -3%) 100%);
+  border: 1px solid $color-wood-frame;
   border-radius: $radius-md;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 210, 140, 0.12),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.35),
+    0 5px 16px rgba(0, 0, 0, 0.5);
 }
 
 @mixin panel-hover {
@@ -25,17 +38,21 @@
 }
 
 @mixin input-base {
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(12, 6, 2, 0.55);
   border: 1px solid $color-border;
   border-radius: $radius-sm;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.45);
   color: $color-cream;
   font-family: $font-body;
   padding: 0.45rem 0.65rem;
-  transition: border-color $transition-fast;
+  transition: border-color $transition-fast, box-shadow $transition-fast;
   width: 100%;
 
   &:focus {
     border-color: $color-gold;
+    box-shadow:
+      inset 0 2px 4px rgba(0, 0, 0, 0.45),
+      0 0 8px rgba($color-gold, 0.25);
     outline: none;
   }
 
