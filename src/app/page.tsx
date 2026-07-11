@@ -113,9 +113,19 @@ export default function LandingPage() {
 
   return (
     <div className={styles.landing}>
-      {/* ---------- Héroe ---------- */}
+      {/* Farolillos de la taberna */}
+      <span className={styles.lantern} aria-hidden />
+      <span className={`${styles.lantern} ${styles.lanternRight}`} aria-hidden />
+
+      {/* ---------- Cartel colgante ---------- */}
       <section className={styles.hero}>
-        <h1 className={styles.title}>Grimorio</h1>
+        <div className={styles.signWrap}>
+          <div className={styles.sign}>
+            <h1 className={styles.title}>Grimorio</h1>
+            <p className={styles.signSub}>⚔ Taberna &amp; mesa de aventuras ⚔</p>
+          </div>
+        </div>
+
         <p className={styles.subtitle}>
           La mesa virtual de <strong>Dungeons &amp; Dragons 5e</strong> en español: fichas
           guiadas por el reglamento, tablero táctico en tiempo real y todo lo que una
@@ -127,11 +137,15 @@ export default function LandingPage() {
           <span className={styles.badge}>SRD 5e en español</span>
           <span className={styles.badge}>Tiempo real</span>
         </div>
-        <button type="button" className={styles.googleBtn} onClick={handleLogin}>
+        <button type="button" className={styles.tavernBtn} onClick={handleLogin}>
           <GoogleIcon /> Entrar con Google
         </button>
         {error && <p className="error-text">{error}</p>}
       </section>
+
+      <div className={styles.divider} aria-hidden>
+        ⚜
+      </div>
 
       {/* ---------- Demo del generador + pasos ---------- */}
       <section className={styles.showcase}>
@@ -139,7 +153,7 @@ export default function LandingPage() {
           <h2 className={styles.sectionTitle}>Cómo funciona</h2>
           {STEPS.map((step) => (
             <div key={step.number} className={styles.step}>
-              <span className={styles.stepNumber}>{step.number}</span>
+              <span className={styles.stepCoin}>{step.number}</span>
               <div>
                 <h3 className={styles.stepTitle}>{step.title}</h3>
                 <p className={styles.stepText}>{step.text}</p>
@@ -150,12 +164,16 @@ export default function LandingPage() {
         <DungeonPreview />
       </section>
 
-      {/* ---------- Funcionalidades ---------- */}
+      <div className={styles.divider} aria-hidden>
+        ⚜
+      </div>
+
+      {/* ---------- Funcionalidades en pergamino ---------- */}
       <section>
         <h2 className={styles.sectionTitle}>Todo lo que trae</h2>
         <div className={styles.features}>
           {FEATURES.map((feature) => (
-            <div key={feature.title} className="panel">
+            <div key={feature.title} className={styles.featureCard}>
               <div className={styles.featureIcon}>{feature.icon}</div>
               <h3 className={styles.featureTitle}>{feature.title}</h3>
               <p className={styles.featureText}>{feature.text}</p>
@@ -164,9 +182,13 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <div className={styles.divider} aria-hidden>
+        ⚜
+      </div>
+
       {/* ---------- Para máster y jugadores ---------- */}
       <section className={styles.roles}>
-        <div className={`panel ${styles.role}`}>
+        <div className={styles.roleCard}>
           <h3 className={styles.roleTitle}>🎩 Si eres el máster</h3>
           <ul>
             {FOR_DM.map((line) => (
@@ -174,7 +196,7 @@ export default function LandingPage() {
             ))}
           </ul>
         </div>
-        <div className={`panel ${styles.role}`}>
+        <div className={styles.roleCard}>
           <h3 className={styles.roleTitle}>🛡 Si eres jugador</h3>
           <ul>
             {FOR_PLAYERS.map((line) => (
@@ -186,8 +208,10 @@ export default function LandingPage() {
 
       {/* ---------- Cierre ---------- */}
       <section className={styles.outro}>
-        <p className={styles.outroText}>La antorcha está encendida. Solo faltáis vosotros.</p>
-        <button type="button" className={styles.googleBtn} onClick={handleLogin}>
+        <p className={styles.outroText}>
+          🕯 La chimenea está encendida y la mesa, servida. Solo faltáis vosotros.
+        </p>
+        <button type="button" className={styles.tavernBtn} onClick={handleLogin}>
           <GoogleIcon /> Empezar gratis
         </button>
       </section>
@@ -225,7 +249,9 @@ function DungeonPreview() {
 
   return (
     <figure className={styles.preview}>
-      <canvas ref={canvasRef} className={styles.previewCanvas} />
+      <div className={styles.previewFrame}>
+        <canvas ref={canvasRef} className={styles.previewCanvas} />
+      </div>
       <figcaption className={styles.previewCaption}>
         Mazmorra generada ahora mismo · ambientación «{THEMES[themeIds[themeIndex]].label}»
       </figcaption>
