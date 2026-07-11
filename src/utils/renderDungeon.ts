@@ -363,7 +363,8 @@ export function renderDungeon(
   canvas: HTMLCanvasElement,
   map: DungeonMap,
   cellSize: number,
-  theme: string = DEFAULT_THEME
+  theme: string = DEFAULT_THEME,
+  title?: string
 ): void {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
@@ -598,6 +599,13 @@ export function renderDungeon(
   ctx.textBaseline = "middle";
   map.rooms.forEach((room, index) => {
     ctx.fillText(String(index + 1), (room.x + room.w / 2) * s, (room.y + room.h / 2) * s);
+    // La guarida del jefe se anuncia con una calavera sobre el número
+    if (room.boss) {
+      ctx.font = `${s * 1.1}px serif`;
+      ctx.fillText("💀", (room.x + room.w / 2) * s, (room.y + room.h / 2) * s - s * 1.2);
+      ctx.font = `700 ${s * 0.8}px serif`;
+      ctx.fillStyle = kit.roomNumber;
+    }
   });
 
   // 7b) Escaleras: entrada en la primera sala, salida en la última
@@ -629,4 +637,29 @@ export function renderDungeon(
   vignette.addColorStop(1, outdoor ? "rgba(10, 20, 5, 0.35)" : "rgba(0, 0, 0, 0.45)");
   ctx.fillStyle = vignette;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // 9) Cartucho con el título del mapa, como en los mapas antiguos
+  if (title?.trim()) {
+    const label = title.trim();
+    const fontSize = Math.max(13, s * 1.15);
+    ctx.font = `700 ${fontSize}px serif`;
+    const textWidth = ctx.measureText(label).width;
+    const padX = fontSize * 0.8;
+    const boxW = textWidth + padX * 2;
+    const boxH = fontSize * 1.9;
+    const x = s * 0.8;
+    const y = canvas.height - boxH - s * 0.8;
+    ctx.fillStyle = "rgba(16, 10, 4, 0.55)";
+    ctx.fillRect(x + 3, y + 4, boxW, boxH);
+    ctx.fillStyle = kit.path;
+    ctx.fillRect(x, y, boxW, boxH);
+    ctx.strokeStyle = "rgba(60, 40, 15, 0.8)";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x + 2.5, y + 2.5, boxW - 5, boxH - 5);
+    ctx.fillStyle = "#3a2708";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.fillText(label, x + padX, y + boxH / 2 + 1);
+    ctx.textAlign = "center";
+  }
 }

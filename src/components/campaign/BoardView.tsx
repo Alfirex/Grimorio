@@ -211,8 +211,8 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (canvas && map) renderDungeon(canvas, map, CELL, board?.theme);
-  }, [map, board?.theme]);
+    if (canvas && map) renderDungeon(canvas, map, CELL, board?.theme, board?.title);
+  }, [map, board?.theme, board?.title]);
 
   // Capa de alcance: verde = puede llegar, rojo = terreno que no puede recorrer
   useEffect(() => {

@@ -17,6 +17,8 @@ export interface Room {
   y: number;
   w: number;
   h: number;
+  /** Guarida del jefe: la sala final, más grande que las demás. */
+  boss?: boolean;
 }
 
 export interface DungeonMap {
@@ -47,6 +49,8 @@ export interface DungeonOptions {
   water?: WaterMode;
   /** Columnas de piedra en las salas grandes: cobertura táctica. */
   pillars?: boolean;
+  /** Guarida del jefe: añade una sala final extragrande marcada con 💀. */
+  bossRoom?: boolean;
 }
 
 /** PRNG determinista (mulberry32) para poder regenerar el mismo mapa con una semilla. */
@@ -410,6 +414,18 @@ export function generateDungeon(options: DungeonOptions): DungeonMap {
   if (water === "lake" || water === "both") carveLake(grid, width, height, rand);
 
   const rooms: Room[] = [];
+
+  // La guarida del jefe se asienta primero: una sala claramente mayor
+  if (options.bossRoom) {
+    const w = Math.min(width - 4, maxRoomSize + 3 + Math.floor(rand() * 4));
+    const h = Math.min(height - 4, maxRoomSize + 2 + Math.floor(rand() * 3));
+    const x = 1 + Math.floor(rand() * Math.max(1, width - w - 2));
+    const y = 1 + Math.floor(rand() * Math.max(1, height - h - 2));
+    const lair: Room = { x, y, w, h, boss: true };
+    rooms.push(lair);
+    carveShapedRoom(grid, lair, shapeMode, rand);
+  }
+
   for (let i = 0; i < roomAttempts; i++) {
     const w = minRoomSize + Math.floor(rand() * (maxRoomSize - minRoomSize + 1));
     const h = minRoomSize + Math.floor(rand() * (maxRoomSize - minRoomSize + 1));
@@ -444,6 +460,11 @@ export function generateDungeon(options: DungeonOptions): DungeonMap {
   placeDoors(grid, width, height);
 
   if (options.pillars) placePillars(grid, rooms, rand);
+
+  // La guarida se coloca al final del recorrido: última sala, con la salida
+  if (options.bossRoom && rooms.length > 1 && rooms[0].boss) {
+    rooms.push(rooms.shift()!);
+  }
 
   return { width, height, grid, rooms, seed };
 }

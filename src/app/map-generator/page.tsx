@@ -53,6 +53,8 @@ function MapGenerator() {
   const [loops, setLoops] = useState<LoopMode>("some");
   const [water, setWater] = useState<WaterMode>("none");
   const [pillars, setPillars] = useState(false);
+  const [bossRoom, setBossRoom] = useState(false);
+  const [title, setTitle] = useState("");
   // Parámetros exactos del mapa mostrado, para poder usarlo como tablero
   const [boardConfig, setBoardConfig] = useState<BoardConfig>({
     ...DEFAULT_OPTIONS,
@@ -76,19 +78,29 @@ function MapGenerator() {
         loops,
         water,
         pillars,
+        bossRoom,
       };
       const dungeon = generateDungeon({ ...options, seed });
       setMap(dungeon);
       setSeedInput(String(dungeon.seed));
-      setBoardConfig({ ...options, seed: dungeon.seed });
+      setBoardConfig({ ...options, seed: dungeon.seed, title: title.trim() });
     },
-    [width, height, roomAttempts, minRoomSize, maxRoomSize, roomShapes, corridorStyle, loops, water, pillars]
+    [width, height, roomAttempts, minRoomSize, maxRoomSize, roomShapes, corridorStyle, loops, water, pillars, bossRoom, title]
   );
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (canvas) renderDungeon(canvas, map, CELL_SIZE, theme);
-  }, [map, theme]);
+    if (canvas) renderDungeon(canvas, map, CELL_SIZE, theme, title);
+  }, [map, theme, title]);
+
+  /** Presets de tamaño: de escaramuza a megadungeon en un clic. */
+  const applyPreset = (w: number, h: number, attempts: number, min: number, max: number) => {
+    setWidth(w);
+    setHeight(h);
+    setRoomAttempts(attempts);
+    setMinRoomSize(min);
+    setMaxRoomSize(max);
+  };
 
   const handleDownload = () => {
     const canvas = canvasRef.current;
@@ -111,6 +123,24 @@ function MapGenerator() {
       <div className={styles.layout}>
         <aside className={`panel ${styles.controls}`}>
           <h2 className="section-title">Parámetros</h2>
+
+          <div className={styles.presetRow}>
+            <span className="field-label">Tamaño rápido</span>
+            <div className={styles.presetButtons}>
+              <button type="button" className="btn btn--sm" onClick={() => applyPreset(36, 26, 6, 4, 9)}>
+                Escaramuza
+              </button>
+              <button type="button" className="btn btn--sm" onClick={() => applyPreset(60, 40, 18, 4, 10)}>
+                Mazmorra
+              </button>
+              <button type="button" className="btn btn--sm" onClick={() => applyPreset(90, 60, 30, 5, 12)}>
+                Gran mazmorra
+              </button>
+              <button type="button" className="btn btn--sm" onClick={() => applyPreset(120, 80, 45, 5, 13)}>
+                Megadungeon
+              </button>
+            </div>
+          </div>
 
           <Control label={`Ancho: ${width}`}>
             <input type="range" min={30} max={120} value={width} onChange={(e) => setWidth(+e.target.value)} />
@@ -190,6 +220,25 @@ function MapGenerator() {
               onChange={(e) => setPillars(e.target.checked)}
             />
             <span className="field-label">Columnas en salas grandes</span>
+          </label>
+
+          <label className={styles.checkRow}>
+            <input
+              type="checkbox"
+              checked={bossRoom}
+              onChange={(e) => setBossRoom(e.target.checked)}
+            />
+            <span className="field-label">Guarida del jefe (sala final 💀)</span>
+          </label>
+
+          <label>
+            <span className="field-label">Título del mapa</span>
+            <input
+              className="input"
+              placeholder="Cripta del Rey Exánime…"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
           </label>
 
           <label>

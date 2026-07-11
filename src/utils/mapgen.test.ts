@@ -195,6 +195,25 @@ describe("generateDungeon", () => {
     expect(walkableIsConnected(withPillars)).toBe(true);
   });
 
+  it("la guarida del jefe es la última sala y la más grande", () => {
+    for (const seed of [7, 1420]) {
+      const map = generateDungeon({ ...OPTIONS, seed, roomShapes: "mixed", bossRoom: true });
+      const lair = map.rooms[map.rooms.length - 1];
+      expect(lair.boss).toBe(true);
+      expect(map.rooms.filter((room) => room.boss)).toHaveLength(1);
+      const lairArea = lair.w * lair.h;
+      for (const room of map.rooms) {
+        if (!room.boss) expect(lairArea).toBeGreaterThanOrEqual(room.w * room.h);
+      }
+      expect(walkableIsConnected(map)).toBe(true);
+    }
+  });
+
+  it("sin guarida, ninguna sala lleva la marca de jefe", () => {
+    const map = generateDungeon(OPTIONS);
+    expect(map.rooms.every((room) => !room.boss)).toBe(true);
+  });
+
   it("las puertas separan pasillos de salas", () => {
     const map = generateDungeon(OPTIONS);
     for (let y = 1; y < map.height - 1; y++) {

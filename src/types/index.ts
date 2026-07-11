@@ -150,6 +150,10 @@ export interface BoardConfig {
   water?: "none" | "river" | "lake" | "both";
   /** Columnas de piedra en las salas grandes. */
   pillars?: boolean;
+  /** Sala final extragrande marcada con 💀. */
+  bossRoom?: boolean;
+  /** Título dibujado en un cartucho sobre el mapa. */
+  title?: string;
 }
 
 export interface BoardToken {
