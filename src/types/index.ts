@@ -140,8 +140,12 @@ export interface BoardConfig {
   maxRoomSize: number;
   /** Ambientación visual: mazmorra, cueva, castillo, bosque… */
   theme?: string;
-  /** Forma de las salas: rect (clásicas), round, poly o mixed. */
-  roomShapes?: "rect" | "round" | "poly" | "mixed";
+  /** Forma de las salas: rect (clásicas), round, poly, cave o mixed. */
+  roomShapes?: "rect" | "round" | "poly" | "cave" | "mixed";
+  /** Trazado de los pasillos: straight, winding o wide. */
+  corridorStyle?: "straight" | "winding" | "wide";
+  /** Conexiones extra entre salas: none, some o many. */
+  loops?: "none" | "some" | "many";
 }
 
 export interface BoardToken {

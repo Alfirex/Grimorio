@@ -110,11 +110,43 @@ describe("generateDungeon", () => {
     }
   });
 
-  it("el modo rect reproduce exactamente la generación clásica", () => {
+  it("los valores por defecto reproducen exactamente la generación clásica", () => {
     const classic = generateDungeon(OPTIONS);
-    const explicit = generateDungeon({ ...OPTIONS, roomShapes: "rect" });
+    const explicit = generateDungeon({
+      ...OPTIONS,
+      roomShapes: "rect",
+      corridorStyle: "straight",
+      loops: "some",
+    });
     expect(explicit.grid).toEqual(classic.grid);
     expect(explicit.rooms).toEqual(classic.rooms);
+  });
+
+  it("pasillos y bucles alternativos mantienen la conectividad", () => {
+    for (const corridorStyle of ["winding", "wide"] as const) {
+      for (const loops of ["none", "some", "many"] as const) {
+        for (const seed of [7, 1420]) {
+          const map = generateDungeon({
+            ...OPTIONS,
+            seed,
+            roomShapes: "mixed",
+            corridorStyle,
+            loops,
+          });
+          expect(
+            walkableIsConnected(map),
+            `${corridorStyle}/${loops}/semilla ${seed}`
+          ).toBe(true);
+        }
+      }
+    }
+  });
+
+  it("las cavernas orgánicas quedan conectadas y son deterministas", () => {
+    const a = generateDungeon({ ...OPTIONS, roomShapes: "cave", corridorStyle: "winding" });
+    const b = generateDungeon({ ...OPTIONS, roomShapes: "cave", corridorStyle: "winding" });
+    expect(a.grid).toEqual(b.grid);
+    expect(walkableIsConnected(a)).toBe(true);
   });
 
   it("admite una sala única", () => {

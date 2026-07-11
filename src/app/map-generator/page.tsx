@@ -5,7 +5,13 @@ import Link from "next/link";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { useAuth } from "@/context/AuthContext";
 import { setCampaignBoard, subscribeMyCampaigns } from "@/lib/db";
-import { generateDungeon, type DungeonMap, type RoomShapeMode } from "@/utils/mapgen";
+import {
+  generateDungeon,
+  type CorridorStyle,
+  type DungeonMap,
+  type LoopMode,
+  type RoomShapeMode,
+} from "@/utils/mapgen";
 import { DEFAULT_THEME, renderDungeon, THEMES } from "@/utils/renderDungeon";
 import type { BoardConfig, Campaign } from "@/types";
 import styles from "./page.module.scss";
@@ -42,6 +48,8 @@ function MapGenerator() {
   const [seedInput, setSeedInput] = useState(String(INITIAL_SEED));
   const [theme, setTheme] = useState(DEFAULT_THEME);
   const [roomShapes, setRoomShapes] = useState<RoomShapeMode>("mixed");
+  const [corridorStyle, setCorridorStyle] = useState<CorridorStyle>("straight");
+  const [loops, setLoops] = useState<LoopMode>("some");
   // Parámetros exactos del mapa mostrado, para poder usarlo como tablero
   const [boardConfig, setBoardConfig] = useState<BoardConfig>({
     ...DEFAULT_OPTIONS,
@@ -61,13 +69,15 @@ function MapGenerator() {
         minRoomSize: Math.min(minRoomSize, maxRoomSize),
         maxRoomSize: Math.max(minRoomSize, maxRoomSize),
         roomShapes,
+        corridorStyle,
+        loops,
       };
       const dungeon = generateDungeon({ ...options, seed });
       setMap(dungeon);
       setSeedInput(String(dungeon.seed));
       setBoardConfig({ ...options, seed: dungeon.seed });
     },
-    [width, height, roomAttempts, minRoomSize, maxRoomSize, roomShapes]
+    [width, height, roomAttempts, minRoomSize, maxRoomSize, roomShapes, corridorStyle, loops]
   );
 
   useEffect(() => {
@@ -120,10 +130,37 @@ function MapGenerator() {
               value={roomShapes}
               onChange={(e) => setRoomShapes(e.target.value as RoomShapeMode)}
             >
-              <option value="mixed">Variadas (mezcla)</option>
+              <option value="mixed">Variadas (cuadradas, circulares, cruces…)</option>
               <option value="rect">Rectangulares</option>
               <option value="round">Redondeadas</option>
               <option value="poly">Poligonales (pentágonos…)</option>
+              <option value="cave">Cavernas orgánicas</option>
+            </select>
+          </label>
+
+          <label>
+            <span className="field-label">Pasillos</span>
+            <select
+              className="input"
+              value={corridorStyle}
+              onChange={(e) => setCorridorStyle(e.target.value as CorridorStyle)}
+            >
+              <option value="straight">Rectos (en L)</option>
+              <option value="winding">Serpenteantes</option>
+              <option value="wide">Anchos (2 casillas)</option>
+            </select>
+          </label>
+
+          <label>
+            <span className="field-label">Conexiones</span>
+            <select
+              className="input"
+              value={loops}
+              onChange={(e) => setLoops(e.target.value as LoopMode)}
+            >
+              <option value="none">Lineales (sin bucles)</option>
+              <option value="some">Normales</option>
+              <option value="many">Laberínticas (muchos bucles)</option>
             </select>
           </label>
 
