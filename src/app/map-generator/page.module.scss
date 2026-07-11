@@ -84,3 +84,13 @@
   image-rendering: pixelated;
   max-width: 100%;
 }
+
+.checkRow {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+
+  :global(.field-label) {
+    margin-bottom: 0;
+  }
+}

@@ -19,6 +19,8 @@ interface ThemeKit {
   grid: string;
   door: string;
   roomNumber: string;
+  /** Color del agua (ríos y lagos). */
+  water: string;
 }
 
 export const THEMES: Record<string, ThemeKit> = {
@@ -33,6 +35,7 @@ export const THEMES: Record<string, ThemeKit> = {
     grid: "rgba(60, 45, 25, 0.22)",
     door: "#8a6420",
     roomNumber: "rgba(90, 74, 47, 0.75)",
+    water: "#2a4d5e",
   },
   cueva: {
     label: "Cueva",
@@ -45,6 +48,7 @@ export const THEMES: Record<string, ThemeKit> = {
     grid: "rgba(30, 28, 35, 0.25)",
     door: "#8a6420",
     roomNumber: "rgba(50, 45, 38, 0.8)",
+    water: "#1f3a4d",
   },
   castillo: {
     label: "Castillo",
@@ -57,6 +61,7 @@ export const THEMES: Record<string, ThemeKit> = {
     grid: "rgba(40, 48, 60, 0.25)",
     door: "#8a6420",
     roomNumber: "rgba(60, 68, 80, 0.8)",
+    water: "#2b4356",
   },
   bosque: {
     label: "Bosque",
@@ -69,6 +74,7 @@ export const THEMES: Record<string, ThemeKit> = {
     grid: "rgba(70, 60, 35, 0.16)",
     door: "#7a5a30",
     roomNumber: "rgba(80, 62, 35, 0.55)",
+    water: "#2e6b8f",
   },
   desierto: {
     label: "Desierto",
@@ -81,6 +87,7 @@ export const THEMES: Record<string, ThemeKit> = {
     grid: "rgba(120, 90, 40, 0.18)",
     door: "#7a5a30",
     roomNumber: "rgba(122, 92, 46, 0.6)",
+    water: "#2e7ba8",
   },
   cripta: {
     label: "Cripta helada",
@@ -93,6 +100,7 @@ export const THEMES: Record<string, ThemeKit> = {
     grid: "rgba(60, 90, 110, 0.25)",
     door: "#4f86a8",
     roomNumber: "rgba(71, 103, 122, 0.8)",
+    water: "#3a6c8f",
   },
 };
 
@@ -321,6 +329,23 @@ function propPuddle(ctx: Ctx, cx: number, cy: number, s: number) {
   ellipse(ctx, cx - s * 0.08, cy - s * 0.04, s * 0.1, s * 0.05, "rgba(255, 255, 255, 0.4)");
 }
 
+/** Escaleras de entrada (bajan hacia la mazmorra) o de salida. */
+function drawStairs(ctx: Ctx, px: number, py: number, s: number, exit: boolean) {
+  ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+  ctx.fillRect(px + s * 0.08, py + s * 0.08, s * 0.84, s * 0.84);
+  for (let i = 0; i < 4; i++) {
+    const shade = 60 + i * 38;
+    ctx.fillStyle = `rgba(${shade + 40}, ${shade + 20}, ${shade - 10}, 0.95)`;
+    const inset = s * (0.12 + i * 0.09);
+    ctx.fillRect(px + inset, py + s * 0.14 + (i * s * 0.19), s - inset * 2, s * 0.16);
+  }
+  ctx.fillStyle = exit ? "rgba(240, 220, 160, 0.95)" : "rgba(20, 12, 4, 0.9)";
+  ctx.font = `700 ${s * 0.42}px serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(exit ? "▲" : "▼", px + s / 2, py + s * 0.5);
+}
+
 type Prop = (ctx: Ctx, cx: number, cy: number, s: number) => void;
 
 const THEME_PROPS: Record<string, Prop[]> = {
@@ -352,7 +377,13 @@ export function renderDungeon(
   canvas.height = map.height * s;
 
   const walkable = (x: number, y: number) =>
-    x >= 0 && y >= 0 && x < map.width && y < map.height && map.grid[y][x] !== "wall";
+    x >= 0 &&
+    y >= 0 &&
+    x < map.width &&
+    y < map.height &&
+    map.grid[y][x] !== "wall" &&
+    map.grid[y][x] !== "water";
+  const isWater = (x: number, y: number) => map.grid[y]?.[x] === "water";
 
   // 1) Terreno base con moteado orgánico
   ctx.fillStyle = kit.base;
@@ -393,6 +424,50 @@ export function renderDungeon(
     }
   }
 
+  // 2b) Agua: charcas hundidas de borde orgánico con destellos
+  for (let y = 0; y < map.height; y++) {
+    for (let x = 0; x < map.width; x++) {
+      if (!isWater(x, y)) continue;
+      const jx = (cellRand(x, y, 131) - 0.5) * s * 0.35;
+      const jy = (cellRand(x, y, 133) - 0.5) * s * 0.35;
+      circle(ctx, x * s + s / 2 + jx, y * s + s / 2 + jy, s * 0.75, "rgba(0, 0, 0, 0.45)");
+    }
+  }
+  for (let y = 0; y < map.height; y++) {
+    for (let x = 0; x < map.width; x++) {
+      if (!isWater(x, y)) continue;
+      const jx = (cellRand(x, y, 131) - 0.5) * s * 0.35;
+      const jy = (cellRand(x, y, 133) - 0.5) * s * 0.35;
+      circle(ctx, x * s + s / 2 + jx, y * s + s / 2 + jy, s * 0.62, kit.water);
+      // Brillo de la corriente
+      if (cellRand(x, y, 137) > 0.6) {
+        const wx = x * s + s * (0.25 + 0.4 * cellRand(x, y, 139));
+        const wy = y * s + s * (0.3 + 0.4 * cellRand(x, y, 141));
+        line(ctx, wx, wy, wx + s * 0.3, wy, "rgba(220, 240, 255, 0.35)", 1);
+      }
+    }
+  }
+
+  // 2c) Puentes: pasillos flanqueados por agua llevan tablones
+  for (let y = 0; y < map.height; y++) {
+    for (let x = 0; x < map.width; x++) {
+      if (map.grid[y][x] !== "corridor") continue;
+      const overWater =
+        (isWater(x - 1, y) && isWater(x + 1, y)) || (isWater(x, y - 1) && isWater(x, y + 1));
+      if (!overWater) continue;
+      const px = x * s;
+      const py = y * s;
+      const across = isWater(x, y - 1) && isWater(x, y + 1); // agua arriba y abajo
+      for (let i = 1; i <= 3; i++) {
+        if (across) {
+          line(ctx, px + (s * i) / 4, py + s * 0.1, px + (s * i) / 4, py + s * 0.9, "rgba(60, 38, 15, 0.55)", 2);
+        } else {
+          line(ctx, px + s * 0.1, py + (s * i) / 4, px + s * 0.9, py + (s * i) / 4, "rgba(60, 38, 15, 0.55)", 2);
+        }
+      }
+    }
+  }
+
   // 3) Rejilla sutil solo sobre lo transitable
   ctx.strokeStyle = kit.grid;
   ctx.lineWidth = 1;
@@ -418,7 +493,7 @@ export function renderDungeon(
   // 5) Escenografía en los muros: detallada junto al camino, masa densa al fondo
   for (let y = 0; y < map.height; y++) {
     for (let x = 0; x < map.width; x++) {
-      if (walkable(x, y)) continue;
+      if (walkable(x, y) || isWater(x, y)) continue;
       let nearPath = false;
       for (let dy = -1; dy <= 1 && !nearPath; dy++) {
         for (let dx = -1; dx <= 1 && !nearPath; dx++) {
@@ -524,6 +599,22 @@ export function renderDungeon(
   map.rooms.forEach((room, index) => {
     ctx.fillText(String(index + 1), (room.x + room.w / 2) * s, (room.y + room.h / 2) * s);
   });
+
+  // 7b) Escaleras: entrada en la primera sala, salida en la última
+  if (map.rooms.length >= 2) {
+    const firstFloorCell = (room: (typeof map.rooms)[number]) => {
+      for (let y = room.y; y < room.y + room.h; y++) {
+        for (let x = room.x; x < room.x + room.w; x++) {
+          if (map.grid[y][x] === "floor") return { x, y };
+        }
+      }
+      return null;
+    };
+    const entrance = firstFloorCell(map.rooms[0]);
+    const exit = firstFloorCell(map.rooms[map.rooms.length - 1]);
+    if (entrance) drawStairs(ctx, entrance.x * s, entrance.y * s, s, false);
+    if (exit) drawStairs(ctx, exit.x * s, exit.y * s, s, true);
+  }
 
   // 8) Viñeta: bordes del mapa ligeramente oscurecidos
   const vignette = ctx.createRadialGradient(

@@ -146,6 +146,10 @@ export interface BoardConfig {
   corridorStyle?: "straight" | "winding" | "wide";
   /** Conexiones extra entre salas: none, some o many. */
   loops?: "none" | "some" | "many";
+  /** Agua en el mapa: none, river, lake o both. */
+  water?: "none" | "river" | "lake" | "both";
+  /** Columnas de piedra en las salas grandes. */
+  pillars?: boolean;
 }
 
 export interface BoardToken {

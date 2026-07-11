@@ -1,4 +1,7 @@
-export type Cell = "wall" | "floor" | "door" | "corridor";
+export type Cell = "wall" | "floor" | "door" | "corridor" | "water";
+
+/** Agua en el mapa: nada, un río que lo cruza, un lago, o ambos. */
+export type WaterMode = "none" | "river" | "lake" | "both";
 
 /** Estilo de las salas: clásicas, redondeadas, poligonales, cavernas o mezcla. */
 export type RoomShapeMode = "rect" | "round" | "poly" | "cave" | "mixed";
@@ -40,6 +43,10 @@ export interface DungeonOptions {
   corridorStyle?: CorridorStyle;
   /** Conexiones extra entre salas; "some" (por defecto) es el clásico. */
   loops?: LoopMode;
+  /** Agua: un río que cruza el mapa (con puentes en los pasillos) o un lago. */
+  water?: WaterMode;
+  /** Columnas de piedra en las salas grandes: cobertura táctica. */
+  pillars?: boolean;
 }
 
 /** PRNG determinista (mulberry32) para poder regenerar el mismo mapa con una semilla. */
@@ -246,7 +253,8 @@ function carveCorridor(
   const width = grid[0].length;
 
   const carve = (x: number, y: number) => {
-    if (grid[y]?.[x] === "wall") grid[y][x] = "corridor";
+    // Sobre el agua, el pasillo se convierte en puente
+    if (grid[y]?.[x] === "wall" || grid[y]?.[x] === "water") grid[y][x] = "corridor";
   };
   // Los pasillos anchos abren una casilla paralela extra
   const carveWide = (x: number, y: number, horizontal: boolean) => {
@@ -302,15 +310,104 @@ function placeDoors(grid: Cell[][], width: number, height: number): void {
   }
 }
 
+/** Río serpenteante de lado a lado del mapa, de dos casillas de ancho. */
+function carveRiver(grid: Cell[][], width: number, height: number, rand: () => number): void {
+  const horizontal = rand() < 0.5;
+  let x = horizontal ? 0 : 1 + Math.floor(rand() * (width - 4));
+  let y = horizontal ? 1 + Math.floor(rand() * (height - 4)) : 0;
+  const paint = () => {
+    for (const [dx, dy] of [[0, 0], [1, 0], [0, 1], [1, 1]] as const) {
+      const px = x + dx;
+      const py = y + dy;
+      if (px >= 0 && py >= 0 && px < width && py < height && grid[py][px] === "wall") {
+        grid[py][px] = "water";
+      }
+    }
+  };
+  let guard = (width + height) * 6;
+  while (guard-- > 0) {
+    paint();
+    if (horizontal ? x >= width - 1 : y >= height - 1) break;
+    if (rand() < 0.35) {
+      // Meandro lateral
+      if (horizontal) y = Math.min(height - 3, Math.max(1, y + (rand() < 0.5 ? 1 : -1)));
+      else x = Math.min(width - 3, Math.max(1, x + (rand() < 0.5 ? 1 : -1)));
+    } else {
+      if (horizontal) x++;
+      else y++;
+    }
+  }
+}
+
+/** Lago: mancha de agua tallada por paseo aleatorio, como las cavernas. */
+function carveLake(grid: Cell[][], width: number, height: number, rand: () => number): void {
+  const w = 8 + Math.floor(rand() * 6);
+  const h = 6 + Math.floor(rand() * 5);
+  const x0 = 2 + Math.floor(rand() * Math.max(1, width - w - 4));
+  const y0 = 2 + Math.floor(rand() * Math.max(1, height - h - 4));
+  let x = x0 + Math.floor(w / 2);
+  let y = y0 + Math.floor(h / 2);
+  for (let i = 0; i < w * h; i++) {
+    for (const [dx, dy] of [[0, 0], [1, 0], [0, 1], [1, 1]] as const) {
+      const px = x + dx;
+      const py = y + dy;
+      if (px >= x0 && px < x0 + w && py >= y0 && py < y0 + h && grid[py][px] === "wall") {
+        grid[py][px] = "water";
+      }
+    }
+    const dir = Math.floor(rand() * 4);
+    if (dir === 0) x++;
+    else if (dir === 1) x--;
+    else if (dir === 2) y++;
+    else y--;
+    x = Math.min(x0 + w - 2, Math.max(x0, x));
+    y = Math.min(y0 + h - 2, Math.max(y0, y));
+  }
+}
+
+/**
+ * Columnas de piedra en salas amplias: casillas de muro sueltas rodeadas de
+ * suelo por los 8 lados, de modo que nunca pueden cortar el paso.
+ */
+function placePillars(grid: Cell[][], rooms: Room[], rand: () => number): void {
+  for (const room of rooms) {
+    if (Math.min(room.w, room.h) < 7) continue;
+    const count = 2 + Math.floor(rand() * 3);
+    const cx = Math.round(room.x + (room.w - 1) / 2);
+    const cy = Math.round(room.y + (room.h - 1) / 2);
+    let placed = 0;
+    for (let attempt = 0; attempt < count * 8 && placed < count; attempt++) {
+      const x = room.x + 2 + Math.floor(rand() * Math.max(1, room.w - 4));
+      const y = room.y + 2 + Math.floor(rand() * Math.max(1, room.h - 4));
+      if (Math.abs(x - cx) <= 1 && Math.abs(y - cy) <= 1) continue; // ni el número de sala
+      let clear = grid[y][x] === "floor";
+      for (let dy = -1; dy <= 1 && clear; dy++) {
+        for (let dx = -1; dx <= 1 && clear; dx++) {
+          if (grid[y + dy][x + dx] !== "floor") clear = false;
+        }
+      }
+      if (clear) {
+        grid[y][x] = "wall";
+        placed++;
+      }
+    }
+  }
+}
+
 export function generateDungeon(options: DungeonOptions): DungeonMap {
   const { width, height, roomAttempts, minRoomSize, maxRoomSize } = options;
   const shapeMode = options.roomShapes ?? "rect";
+  const water = options.water ?? "none";
   const seed = options.seed ?? Math.floor(Math.random() * 2 ** 31);
   const rand = mulberry32(seed);
 
   const grid: Cell[][] = Array.from({ length: height }, () =>
     Array.from({ length: width }, (): Cell => "wall")
   );
+
+  // El agua se tiende primero: las salas la apartan y los pasillos la puentean
+  if (water === "river" || water === "both") carveRiver(grid, width, height, rand);
+  if (water === "lake" || water === "both") carveLake(grid, width, height, rand);
 
   const rooms: Room[] = [];
   for (let i = 0; i < roomAttempts; i++) {
@@ -345,6 +442,8 @@ export function generateDungeon(options: DungeonOptions): DungeonMap {
   }
 
   placeDoors(grid, width, height);
+
+  if (options.pillars) placePillars(grid, rooms, rand);
 
   return { width, height, grid, rooms, seed };
 }

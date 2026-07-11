@@ -13,7 +13,12 @@ const OPTIONS = {
 /** Todas las celdas transitables deben formar un único componente conexo. */
 function walkableIsConnected(map: DungeonMap): boolean {
   const walkable = (x: number, y: number) =>
-    x >= 0 && y >= 0 && x < map.width && y < map.height && map.grid[y][x] !== "wall";
+    x >= 0 &&
+    y >= 0 &&
+    x < map.width &&
+    y < map.height &&
+    map.grid[y][x] !== "wall" &&
+    map.grid[y][x] !== "water";
 
   let start: [number, number] | null = null;
   let total = 0;
@@ -155,6 +160,39 @@ describe("generateDungeon", () => {
       expect(map.rooms, roomShapes).toHaveLength(1);
       expect(walkableIsConnected(map), roomShapes).toBe(true);
     }
+  });
+
+  it("ríos y lagos generan agua sin romper la conectividad", () => {
+    for (const water of ["river", "lake", "both"] as const) {
+      for (const seed of [7, 1420, 99]) {
+        const map = generateDungeon({ ...OPTIONS, seed, roomShapes: "mixed", water });
+        const hasWater = map.grid.some((row) => row.includes("water"));
+        expect(hasWater, `${water}/semilla ${seed}`).toBe(true);
+        expect(walkableIsConnected(map), `${water}/semilla ${seed}`).toBe(true);
+      }
+    }
+  });
+
+  it("las columnas aparecen dentro de salas grandes y no cortan el paso", () => {
+    const withPillars = generateDungeon({
+      ...OPTIONS,
+      minRoomSize: 8,
+      maxRoomSize: 14,
+      pillars: true,
+    });
+    const without = generateDungeon({ ...OPTIONS, minRoomSize: 8, maxRoomSize: 14 });
+    let pillarCells = 0;
+    for (const room of withPillars.rooms) {
+      for (let y = room.y; y < room.y + room.h; y++) {
+        for (let x = room.x; x < room.x + room.w; x++) {
+          if (withPillars.grid[y][x] === "wall" && without.grid[y][x] === "floor") {
+            pillarCells++;
+          }
+        }
+      }
+    }
+    expect(pillarCells).toBeGreaterThan(0);
+    expect(walkableIsConnected(withPillars)).toBe(true);
   });
 
   it("las puertas separan pasillos de salas", () => {

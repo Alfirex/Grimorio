@@ -11,6 +11,7 @@ import {
   type DungeonMap,
   type LoopMode,
   type RoomShapeMode,
+  type WaterMode,
 } from "@/utils/mapgen";
 import { DEFAULT_THEME, renderDungeon, THEMES } from "@/utils/renderDungeon";
 import type { BoardConfig, Campaign } from "@/types";
@@ -50,6 +51,8 @@ function MapGenerator() {
   const [roomShapes, setRoomShapes] = useState<RoomShapeMode>("mixed");
   const [corridorStyle, setCorridorStyle] = useState<CorridorStyle>("straight");
   const [loops, setLoops] = useState<LoopMode>("some");
+  const [water, setWater] = useState<WaterMode>("none");
+  const [pillars, setPillars] = useState(false);
   // Parámetros exactos del mapa mostrado, para poder usarlo como tablero
   const [boardConfig, setBoardConfig] = useState<BoardConfig>({
     ...DEFAULT_OPTIONS,
@@ -71,13 +74,15 @@ function MapGenerator() {
         roomShapes,
         corridorStyle,
         loops,
+        water,
+        pillars,
       };
       const dungeon = generateDungeon({ ...options, seed });
       setMap(dungeon);
       setSeedInput(String(dungeon.seed));
       setBoardConfig({ ...options, seed: dungeon.seed });
     },
-    [width, height, roomAttempts, minRoomSize, maxRoomSize, roomShapes, corridorStyle, loops]
+    [width, height, roomAttempts, minRoomSize, maxRoomSize, roomShapes, corridorStyle, loops, water, pillars]
   );
 
   useEffect(() => {
@@ -162,6 +167,29 @@ function MapGenerator() {
               <option value="some">Normales</option>
               <option value="many">Laberínticas (muchos bucles)</option>
             </select>
+          </label>
+
+          <label>
+            <span className="field-label">Agua</span>
+            <select
+              className="input"
+              value={water}
+              onChange={(e) => setWater(e.target.value as WaterMode)}
+            >
+              <option value="none">Sin agua</option>
+              <option value="river">Río (con puentes)</option>
+              <option value="lake">Lago</option>
+              <option value="both">Río y lago</option>
+            </select>
+          </label>
+
+          <label className={styles.checkRow}>
+            <input
+              type="checkbox"
+              checked={pillars}
+              onChange={(e) => setPillars(e.target.checked)}
+            />
+            <span className="field-label">Columnas en salas grandes</span>
           </label>
 
           <label>

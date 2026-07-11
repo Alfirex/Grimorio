@@ -194,6 +194,7 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
               nx < map.width &&
               ny < map.height &&
               map.grid[ny][nx] !== "wall" &&
+              map.grid[ny][nx] !== "water" &&
               !(map.grid[ny][nx] === "door" && !openDoors.has(key)) &&
               !visited.has(key)
             ) {
@@ -277,7 +278,7 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
       const nx = selectedToken.x + delta[0];
       const ny = selectedToken.y + delta[1];
       if (nx < 0 || ny < 0 || nx >= map.width || ny >= map.height) return;
-      if (map.grid[ny][nx] === "wall" || isClosedDoor(nx, ny)) return;
+      if (map.grid[ny][nx] === "wall" || map.grid[ny][nx] === "water" || isClosedDoor(nx, ny)) return;
       if (tokenList.some((t) => t.x === nx && t.y === ny)) return;
       moveBoardToken(campaign.id, selectedToken.id, nx, ny);
       if (selectedToken.characterId) {
@@ -367,6 +368,10 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
     }
 
     if (selectedId && selectedToken && map.grid[y][x] !== "wall") {
+      if (map.grid[y][x] === "water") {
+        setNotice("El agua corta el paso: busca un puente.");
+        return;
+      }
       if (isClosedDoor(x, y)) {
         setNotice("La puerta está cerrada.");
         return;
