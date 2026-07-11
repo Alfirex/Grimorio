@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Alegreya, Cinzel } from "next/font/google";
 import { AuthProvider } from "@/context/AuthContext";
 import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
 import { DiceRoller } from "@/components/dice/DiceRoller";
 import "./globals.css";
 import "@/styles/globals.scss";
@@ -34,6 +35,7 @@ export default function RootLayout({
         <AuthProvider>
           <Navbar />
           <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-6">{children}</main>
+          <Footer />
           <DiceRoller />
         </AuthProvider>
       </body>
