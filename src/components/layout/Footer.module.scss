@@ -120,6 +120,31 @@ $stones: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width
   }
 }
 
+.lockedNote {
+  color: #b3a68e;
+  font-size: 0.82rem;
+  font-style: italic;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+}
+
+.loginLink {
+  background: none;
+  border: none;
+  color: $color-gold-light;
+  cursor: pointer;
+  font-family: $font-body;
+  font-size: 0.85rem;
+  padding: 0;
+  text-align: left;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+  transition: color $transition-fast;
+
+  &:hover {
+    color: $color-gold;
+    text-decoration: underline;
+  }
+}
+
 .credits {
   p {
     color: #b3a68e;

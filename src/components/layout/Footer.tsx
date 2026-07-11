@@ -1,8 +1,13 @@
+"use client";
+
 import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
 import styles from "./Footer.module.scss";
 
 /** Cimientos de piedra de la taberna: cierre de todas las páginas. */
 export function Footer() {
+  const { user, configured, signInWithGoogle } = useAuth();
+
   return (
     <footer className={`${styles.footer} no-print`}>
       <span className={styles.torch} aria-hidden>
@@ -22,9 +27,28 @@ export function Footer() {
 
         <nav className={styles.links} aria-label="Enlaces del pie">
           <span className={styles.linksTitle}>La taberna</span>
-          <Link href="/dashboard">Mi Mesa</Link>
-          <Link href="/map-generator">Mapas</Link>
-          <Link href="/compendium">Compendio</Link>
+          {user ? (
+            <>
+              <Link href="/dashboard">Mi Mesa</Link>
+              <Link href="/map-generator">Mapas</Link>
+              <Link href="/compendium">Compendio</Link>
+            </>
+          ) : (
+            <>
+              <p className={styles.lockedNote}>
+                La puerta está cerrada con llave para los desconocidos.
+              </p>
+              {configured && (
+                <button
+                  type="button"
+                  className={styles.loginLink}
+                  onClick={() => signInWithGoogle().catch(() => {})}
+                >
+                  🔑 Entrar para sentarte a la mesa
+                </button>
+              )}
+            </>
+          )}
         </nav>
 
         <div className={styles.credits}>
