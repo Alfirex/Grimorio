@@ -1542,6 +1542,22 @@ function AttackPanel({
     }
   };
 
+  /** Habilidades con "(recarga 5-6)": d6 al empezar el turno para recuperarlas. */
+  const rollRecharge = async (ability: string, threshold: number) => {
+    setBusy(true);
+    try {
+      const d6 = 1 + Math.floor(Math.random() * 6);
+      const name = ability.split(/[:—(]/)[0].trim();
+      await onLog(
+        `↻ ${attacker.name} intenta recargar ${name}: d6 = ${d6} (necesita ${threshold}+) — ${
+          d6 >= threshold ? "¡recargada!" : "no recarga"
+        }`
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const executeAttack = async (name: string, bonusText: string, damageExpr: string) => {
     setBusy(true);
     try {
@@ -1692,20 +1708,34 @@ function AttackPanel({
           {abilities.map((ability) => {
             // Si la habilidad menciona dados (p. ej. "Curar heridas — 1d8+3"), se puede tirar
             const dice = ability.match(/\d{0,3}d\d{1,4}(?:\s*[+-]\s*\d{1,4})?/i)?.[0];
+            const recharge = ability.match(/recarga\s*(\d)/i);
             return (
               <li key={ability} className={styles.abilityRow}>
                 <span>✧ {ability}</span>
-                {dice && (
-                  <button
-                    type="button"
-                    className="btn btn--sm"
-                    disabled={busy}
-                    title="Tirar los dados de la habilidad y anotarlo en el registro"
-                    onClick={() => rollAbility(ability, dice)}
-                  >
-                    🎲 {dice}
-                  </button>
-                )}
+                <span className={styles.abilityButtons}>
+                  {recharge && (
+                    <button
+                      type="button"
+                      className="btn btn--sm"
+                      disabled={busy}
+                      title={`Tirar d6: con ${recharge[1]} o más, la habilidad se recarga`}
+                      onClick={() => rollRecharge(ability, parseInt(recharge[1], 10))}
+                    >
+                      ↻ d6
+                    </button>
+                  )}
+                  {dice && (
+                    <button
+                      type="button"
+                      className="btn btn--sm"
+                      disabled={busy}
+                      title="Tirar los dados de la habilidad y anotarlo en el registro"
+                      onClick={() => rollAbility(ability, dice)}
+                    >
+                      🎲 {dice}
+                    </button>
+                  )}
+                </span>
               </li>
             );
           })}

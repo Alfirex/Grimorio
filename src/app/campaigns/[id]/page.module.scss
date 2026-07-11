@@ -43,6 +43,40 @@
   gap: 0.6rem;
 }
 
+.help {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  color: $color-cream;
+  font-size: 0.85rem;
+  padding: 0.6rem 1rem;
+
+  summary {
+    color: $color-gold-light;
+    cursor: pointer;
+    font-family: $font-display;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  ul {
+    display: grid;
+    gap: 0.35rem;
+    list-style: none;
+    margin: 0.6rem 0 0;
+    padding: 0;
+  }
+
+  strong {
+    color: $color-gold-light;
+  }
+}
+
+.kickBtn {
+  margin-top: 0.5rem;
+}
+
 .yourTurn {
   animation: your-turn-glow 1.8s ease-in-out infinite;
   background: rgba($color-gold, 0.12);

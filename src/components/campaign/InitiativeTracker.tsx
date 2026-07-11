@@ -57,6 +57,14 @@ export function InitiativeTracker({ campaign, characters, isDM }: InitiativeTrac
     return token?.maxHp ? `${token.hp ?? 0}/${token.maxHp}` : "—";
   };
 
+  /** Caído: enemigo muerto o personaje inconsciente (se muestra tachado). */
+  const isDown = (combatant: Combatant): boolean => {
+    const character = characters.find((c) => c.id === combatant.id);
+    if (character) return character.currentHp <= 0;
+    const token = tokens.find((t) => t.id === combatant.id);
+    return Boolean(token?.maxHp) && (token?.hp ?? 0) <= 0;
+  };
+
   const handleStart = async () => {
     // Jugadores con su bono real; los enemigos vivos del tablero con d20
     const players: Combatant[] = characters.map((character) => ({
@@ -212,7 +220,9 @@ export function InitiativeTracker({ campaign, characters, isDM }: InitiativeTrac
         {sorted.map((combatant, index) => (
           <li
             key={combatant.id}
-            className={`${styles.row} ${index === encounter.turnIndex ? styles.active : ""}`}
+            className={`${styles.row} ${index === encounter.turnIndex ? styles.active : ""} ${
+              isDown(combatant) ? styles.down : ""
+            }`}
           >
             <span className={styles.turnMarker}>
               {index === encounter.turnIndex ? "➤" : ""}

@@ -544,6 +544,12 @@
   justify-content: space-between;
 }
 
+.abilityButtons {
+  display: flex;
+  flex-shrink: 0;
+  gap: 0.25rem;
+}
+
 .modeRow {
   display: flex;
   gap: 0.3rem;

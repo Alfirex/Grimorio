@@ -5,7 +5,12 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { RequireAuth } from "@/components/auth/RequireAuth";
-import { deleteCampaign, subscribeCampaign, subscribeCampaignCharacters } from "@/lib/db";
+import {
+  deleteCampaign,
+  subscribeCampaign,
+  subscribeCampaignCharacters,
+  updateCharacter,
+} from "@/lib/db";
 import { BoardView } from "@/components/campaign/BoardView";
 import { CampaignJournal } from "@/components/campaign/CampaignJournal";
 import { HandoutsPanel } from "@/components/campaign/HandoutsPanel";
@@ -110,6 +115,37 @@ function CampaignView({ campaignId }: { campaignId: string }) {
         </p>
       )}
 
+      <details className={styles.help}>
+        <summary>❓ Cómo se juega</summary>
+        <ul>
+          <li>
+            <strong>Mover:</strong> clic en tu ficha y luego en una casilla (o flechas del
+            teclado). Verde = a tu alcance; las puertas 🚪 se abren con tu ficha al lado.
+          </li>
+          <li>
+            <strong>Atacar:</strong> con tu ficha seleccionada, clic en un enemigo. Elige
+            ataque (respetando su alcance), ventaja/desventaja, o fuerza una salvación.
+          </li>
+          <li>
+            <strong>Conjuros de área:</strong> activa una plantilla (esfera, cono…), apunta
+            con el cursor y resuélvela: salvación y daño a todos los afectados.
+          </li>
+          <li>
+            <strong>Estados y PG:</strong> selecciona una ficha para marcar condiciones;
+            el máster puede curar o dañar a mano. A 0 PG, los héroes caen inconscientes:
+            salvaciones de muerte en su ficha.
+          </li>
+          <li>
+            <strong>Botín y PX:</strong> con la sala limpia, «Recoger botín» reparte el oro
+            al saqueador y los PX entre todo el grupo. La ficha avisa al subir de nivel.
+          </li>
+          <li>
+            <strong>Turnos:</strong> el máster inicia el combate en «Iniciativa»; la ficha
+            activa brilla en dorado y la página avisa cuando te toca.
+          </li>
+        </ul>
+      </details>
+
       {myTurnCharacter && (
         <p className={styles.yourTurn}>
           ⚔ ¡Es tu turno, <strong>{myTurnCharacter.name || "héroe"}</strong>! (ronda{" "}
@@ -146,6 +182,26 @@ function CampaignView({ campaignId }: { campaignId: string }) {
                     ❤ {character.currentHp}/{character.maxHp} · CA {character.armorClass} ·
                     Percepción pasiva {passivePerception(character)}
                   </div>
+                  {isDM && character.ownerUid !== user.uid && (
+                    <button
+                      type="button"
+                      className={`btn btn--danger btn--sm ${styles.kickBtn}`}
+                      title="Sacar el personaje de la campaña (no lo borra)"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (
+                          window.confirm(
+                            `¿Sacar a ${character.name || "este personaje"} de la campaña? La ficha no se borra.`
+                          )
+                        ) {
+                          updateCharacter(character.id, { campaignId: null });
+                        }
+                      }}
+                    >
+                      Sacar de la campaña
+                    </button>
+                  )}
                 </Link>
               ))}
             </div>

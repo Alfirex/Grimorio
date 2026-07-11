@@ -71,6 +71,15 @@
   border-color: $color-gold;
 }
 
+// Caído: enemigo muerto o personaje inconsciente
+.down {
+  opacity: 0.55;
+
+  .name {
+    text-decoration: line-through;
+  }
+}
+
 .turnMarker {
   color: $color-gold;
   min-width: 1rem;
