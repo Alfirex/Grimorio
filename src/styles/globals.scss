@@ -200,11 +200,24 @@ textarea.input {
   font-size: 0.85rem;
 }
 
+// Solo existe sobre el papel: atribución del SRD en fichas impresas
+.print-attribution {
+  display: none;
+}
+
 // ---------- Impresión: ficha legible en papel ----------
 
 @media print {
   .no-print {
     display: none !important;
+  }
+
+  .print-attribution {
+    color: #5a4a2f;
+    display: block;
+    font-size: 8.5px;
+    margin-top: 14px;
+    text-align: center;
   }
 
   body {
