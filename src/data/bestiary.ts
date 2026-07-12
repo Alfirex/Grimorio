@@ -284,7 +284,7 @@ export const BESTIARY: MonsterDef[] = [
     ],
     abilities: [
       "Truco: Descarga sobrenatural",
-      "Nv1: Maleficio — +1d6 necrótico a sus ataques contra el objetivo marcado",
+      "Nv1: Perdición — −1d4 a los ataques y salvaciones de hasta 3 enemigos (CAR anula)",
       "Nv1: Curar heridas — 1d8+3 PG a un aliado (2 usos)",
     ],
     loot: "2d6",

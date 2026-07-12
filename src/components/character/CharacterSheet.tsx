@@ -277,6 +277,10 @@ export function CharacterSheet({ characterId }: { characterId: string }) {
                 value={character.race}
                 onChange={(e) => set({ race: e.target.value })}
               >
+                {/* Conserva razas antiguas que ya no estén en el listado */}
+                {character.race && !RACES.includes(character.race) && (
+                  <option value={character.race}>{character.race}</option>
+                )}
                 {RACES.map((race) => (
                   <option key={race}>{race}</option>
                 ))}

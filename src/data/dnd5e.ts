@@ -80,7 +80,7 @@ export interface RaceDef {
   languages: string;
 }
 
-/** Razas del Manual del Jugador con su mecánica aplicable. */
+/** Razas del SRD 5.1 con su mecánica aplicable. */
 export const RACE_DETAILS: RaceDef[] = [
   {
     name: "Humano",
@@ -186,44 +186,6 @@ export const RACE_DETAILS: RaceDef[] = [
     ],
     languages: "común e infernal",
   },
-  {
-    name: "Aasimar",
-    bonuses: { cha: 2, wis: 1 },
-    speed: 30,
-    traits: [
-      "Visión en la oscuridad 60 pies",
-      "Resistencia celestial: resistencia a daño necrótico y radiante",
-      "Manos sanadoras: cura tu nivel en PG por contacto, 1/descanso largo",
-      "Portador de luz: conoces el truco Luz",
-    ],
-    languages: "común y celestial",
-  },
-  {
-    name: "Goliat",
-    bonuses: { str: 2, con: 1 },
-    speed: 30,
-    skills: ["athletics"],
-    traits: [
-      "Atleta nato: competencia en Atletismo",
-      "Resistencia de piedra: reacción para reducir el daño 1d12 + CON, 1/descanso",
-      "Nacido en la montaña: aclimatado a gran altitud y frío",
-      "Corpulento: cuentas como una talla más para carga",
-    ],
-    languages: "común y gigante",
-  },
-  {
-    name: "Tabaxi",
-    bonuses: { dex: 2, cha: 1 },
-    speed: 30,
-    skills: ["perception", "stealth"],
-    traits: [
-      "Visión en la oscuridad 60 pies",
-      "Agilidad felina: duplica tu velocidad un turno (se recarga si no te mueves uno)",
-      "Garras: 1d4 + FUE cortante; velocidad de trepar 20 pies",
-      "Talento felino: competencia en Percepción y Sigilo",
-    ],
-    languages: "común y otro a tu elección",
-  },
 ];
 
 export const RACES: string[] = [...RACE_DETAILS.map((race) => race.name), "Otro"];
@@ -250,7 +212,7 @@ export interface BackgroundDef {
   feature: string;
 }
 
-/** Trasfondos del Manual del Jugador con su mecánica aplicable. */
+/** Trasfondos genéricos con mecánica aplicable (redacción propia). */
 export const BACKGROUND_DETAILS: BackgroundDef[] = [
   {
     name: "Acólito",
@@ -262,73 +224,73 @@ export const BACKGROUND_DETAILS: BackgroundDef[] = [
     name: "Artesano Gremial",
     skills: ["insight", "persuasion"],
     extras: "herramientas de artesano y un idioma",
-    feature: "Pertenencia al gremio: apoyo e influencia de tu gremio",
+    feature: "Hermandad del oficio: los talleres y gremios de tu ramo te abren las puertas",
   },
   {
     name: "Charlatán",
     skills: ["deception", "sleight-of-hand"],
     extras: "kit de disfraz y kit de falsificación",
-    feature: "Identidad falsa: una segunda identidad documentada",
+    feature: "Segunda piel: vives bajo un nombre que no es el tuyo, con papeles que lo demuestran",
   },
   {
     name: "Criminal",
     skills: ["deception", "stealth"],
     extras: "kit de ladrón y un juego de azar",
-    feature: "Contacto criminal: enlace fiable con el hampa",
+    feature: "Susurros del hampa: siempre hay alguien del mal vivir que te debe un favor",
   },
   {
     name: "Artista",
     skills: ["acrobatics", "performance"],
     extras: "kit de disfraz y un instrumento musical",
-    feature: "A petición del público: actúas a cambio de techo y comida",
+    feature: "Función asegurada: allí donde actúas te ganas cama, cena y aplausos",
   },
   {
     name: "Héroe del Pueblo",
     skills: ["animal-handling", "survival"],
     extras: "herramientas de artesano y vehículos terrestres",
-    feature: "Hospitalidad rústica: la gente humilde te esconde y te ayuda",
+    feature: "De los nuestros: la gente sencilla te esconde, te alimenta y no te delata",
   },
   {
     name: "Noble",
     skills: ["history", "persuasion"],
     extras: "un juego de azar y un idioma",
-    feature: "Posición privilegiada: la alta sociedad te recibe",
+    feature: "Sangre reconocida: los salones y las audiencias se abren a tu apellido",
   },
   {
     name: "Ermitaño",
     skills: ["medicine", "religion"],
     extras: "kit de herboristería y un idioma",
-    feature: "Descubrimiento: conoces un secreto único y poderoso",
+    feature: "Revelación: tu retiro te dejó un secreto único que aún guarda su poder",
   },
   {
     name: "Forastero",
     skills: ["athletics", "survival"],
     extras: "un instrumento musical y un idioma",
-    feature: "Errante: memoria excelente para mapas; encuentras comida para el grupo",
+    feature: "Memoria del territorio: recuerdas rutas y terrenos, y encuentras sustento para el grupo",
   },
   {
     name: "Marinero",
     skills: ["athletics", "perception"],
     extras: "herramientas de navegante y vehículos acuáticos",
-    feature: "Pasaje de barco: viajas gratis por mar a cambio de trabajo",
+    feature: "Brazos a bordo: pasaje gratis por mar a cambio de echar una mano",
   },
   {
     name: "Soldado",
     skills: ["athletics", "intimidation"],
     extras: "un juego de azar y vehículos terrestres",
-    feature: "Rango militar: los soldados de tu antigua organización te reconocen",
+    feature: "Voz de mando: los veteranos reconocen tu graduación y te escuchan",
   },
   {
     name: "Huérfano",
     skills: ["sleight-of-hand", "stealth"],
     extras: "kit de disfraz y kit de ladrón",
-    feature: "Secretos de la ciudad: conoces los pasadizos urbanos; viajas al doble de rápido entre lugares de la ciudad",
+    feature: "Callejones sin nombre: cruzas la ciudad el doble de rápido por atajos que solo tú ves",
   },
   {
     name: "Sabio",
     skills: ["arcana", "history"],
     extras: "dos idiomas a tu elección",
-    feature: "Investigador: sabes dónde o a quién consultar lo que no conoces",
+    feature: "Saber dónde buscar: si no conoces la respuesta, sabes quién la conoce o dónde está escrita",
   },
 ];
 
@@ -363,7 +325,7 @@ export interface GearDef {
   weight: number;
 }
 
-/** Equipo habitual del Manual del Jugador, para autocompletar el inventario. */
+/** Equipo de aventurero habitual (SRD), para autocompletar el inventario. */
 export const GEAR: GearDef[] = [
   { name: "Mochila", weight: 5 },
   { name: "Saco de dormir", weight: 7 },
@@ -456,43 +418,24 @@ export interface DeityDef {
   domains: string;
 }
 
-/** Panteón de los Reinos Olvidados (Manual del Jugador). */
+/** Panteón propio de Grimorio: deidades originales con dominios jugables. */
 export const DEITIES: DeityDef[] = [
-  { name: "Auril", title: "diosa del invierno", domains: "Naturaleza, Tempestad" },
-  { name: "Azuth", title: "dios de los magos", domains: "Conocimiento" },
-  { name: "Bane", title: "dios de la tiranía", domains: "Guerra" },
-  { name: "Beshaba", title: "diosa de la mala suerte", domains: "Engaño" },
-  { name: "Bhaal", title: "dios del asesinato", domains: "Muerte" },
-  { name: "Chauntea", title: "diosa de la agricultura", domains: "Vida" },
-  { name: "Cyric", title: "dios de las mentiras", domains: "Engaño" },
-  { name: "Eldath", title: "diosa de la paz", domains: "Vida, Naturaleza" },
-  { name: "Gond", title: "dios de la artesanía", domains: "Conocimiento" },
-  { name: "Helm", title: "dios de la protección", domains: "Vida, Luz" },
-  { name: "Ilmater", title: "dios de la resistencia", domains: "Vida" },
-  { name: "Kelemvor", title: "dios de los muertos", domains: "Muerte" },
-  { name: "Lathander", title: "dios del amanecer y la renovación", domains: "Vida, Luz" },
-  { name: "Leira", title: "diosa de la ilusión", domains: "Engaño" },
-  { name: "Lliira", title: "diosa de la alegría", domains: "Vida" },
-  { name: "Loviatar", title: "diosa del dolor", domains: "Muerte" },
-  { name: "Malar", title: "dios de la caza", domains: "Naturaleza" },
-  { name: "Mask", title: "dios de los ladrones", domains: "Engaño" },
-  { name: "Mielikki", title: "diosa de los bosques", domains: "Naturaleza" },
-  { name: "Milil", title: "dios de la poesía y la canción", domains: "Luz" },
-  { name: "Myrkul", title: "dios de la muerte", domains: "Muerte" },
-  { name: "Mystra", title: "diosa de la magia", domains: "Conocimiento" },
-  { name: "Oghma", title: "dios del conocimiento", domains: "Conocimiento" },
-  { name: "Selûne", title: "diosa de la luna", domains: "Conocimiento, Vida" },
-  { name: "Shar", title: "diosa de la oscuridad y la pérdida", domains: "Muerte, Engaño" },
-  { name: "Silvanus", title: "dios de la naturaleza salvaje", domains: "Naturaleza" },
-  { name: "Sune", title: "diosa del amor y la belleza", domains: "Vida, Luz" },
-  { name: "Talona", title: "diosa de la enfermedad y el veneno", domains: "Muerte" },
-  { name: "Talos", title: "dios de las tormentas", domains: "Tempestad" },
-  { name: "Tempus", title: "dios de la guerra", domains: "Guerra" },
-  { name: "Torm", title: "dios del coraje y el sacrificio", domains: "Guerra" },
-  { name: "Tymora", title: "diosa de la buena fortuna", domains: "Engaño" },
-  { name: "Tyr", title: "dios de la justicia", domains: "Guerra" },
-  { name: "Umberlee", title: "diosa del mar", domains: "Tempestad" },
-  { name: "Waukeen", title: "diosa del comercio", domains: "Conocimiento, Engaño" },
+  { name: "Aurion", title: "señor del alba eterna", domains: "Vida, Luz" },
+  { name: "Nocturna", title: "guardiana de los secretos", domains: "Engaño" },
+  { name: "Ferrum", title: "el forjador del mundo", domains: "Conocimiento, Guerra" },
+  { name: "Silvara", title: "madre del bosque antiguo", domains: "Naturaleza, Vida" },
+  { name: "Vendaval", title: "rey de las tormentas", domains: "Tempestad" },
+  { name: "La Segadora Gris", title: "que guía a los muertos", domains: "Muerte" },
+  { name: "Lúmina", title: "la llama de los juramentos", domains: "Luz, Guerra" },
+  { name: "Fortuna", title: "la moneda en el aire", domains: "Engaño, Vida" },
+  { name: "El Peregrino", title: "andar de los mil caminos", domains: "Conocimiento, Naturaleza" },
+  { name: "Marea", title: "señora de los mares sin fondo", domains: "Tempestad" },
+  { name: "Espiga", title: "madre del grano y la mesa", domains: "Vida, Naturaleza" },
+  { name: "El Centinela", title: "el ojo que no duerme", domains: "Conocimiento, Guerra" },
+  { name: "Cruor", title: "dios de la batalla sin fin", domains: "Guerra" },
+  { name: "La Tejedora", title: "hilandera de la magia", domains: "Conocimiento" },
+  { name: "Ceniza", title: "señor del fuego y la fragua", domains: "Guerra, Tempestad" },
+  { name: "Alba y Ocaso", title: "las hermanas gemelas del tiempo", domains: "Vida, Muerte" },
 ];
 
 export const SPELL_LEVEL_LABELS = [

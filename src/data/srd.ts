@@ -63,15 +63,6 @@ export const CLASS_CONTENT: Record<string, ClassContent> = {
           f(14, "Represalia", "Reacción: ataque cuerpo a cuerpo contra quien te dañe estando a 5 pies"),
         ],
       },
-      {
-        name: "Senda del Guerrero Totémico",
-        features: [
-          f(3, "Espíritu totémico", "Oso: resistencia a todo el daño (salvo psíquico) en furia; o águila/lobo"),
-          f(6, "Aspecto de la bestia", "Beneficio pasivo del animal: carga del oso, vista de águila…"),
-          f(10, "Caminante espiritual", "Puedes lanzar Comunión con la naturaleza como ritual"),
-          f(14, "Sintonía totémica", "Poder mayor del tótem: derribas al golpear (oso), vuelo corto (águila)…"),
-        ],
-      },
     ],
   },
   Bardo: {
@@ -99,15 +90,6 @@ export const CLASS_CONTENT: Record<string, ClassContent> = {
           f(14, "Habilidad sin igual", "Gasta inspiración para sumar el dado a tu propia prueba"),
         ],
       },
-      {
-        name: "Colegio del Valor",
-        features: [
-          f(3, "Competencias adicionales", "Armaduras medias, escudos y armas marciales"),
-          f(3, "Inspiración de combate", "Tu inspiración también sirve para daño o para sumar a la CA"),
-          f(6, "Ataque adicional", "Atacas dos veces al usar la acción de Atacar"),
-          f(14, "Magia de batalla", "Tras lanzar un conjuro, un ataque con arma como acción adicional"),
-        ],
-      },
     ],
   },
   Brujo: {
@@ -129,24 +111,6 @@ export const CLASS_CONTENT: Record<string, ClassContent> = {
           f(6, "Suerte del Oscuro", "+1d10 a una prueba o salvación, 1/descanso"),
           f(10, "Resistencia infernal", "Resistencia a un tipo de daño a tu elección cada descanso"),
           f(14, "Lanzar a través del infierno", "Destierra al objetivo un turno: 10d10 psíquico"),
-        ],
-      },
-      {
-        name: "El Feérico",
-        features: [
-          f(1, "Presencia feérica", "Hechiza o asusta en un cubo de 10 pies (SAB anula)"),
-          f(6, "Escape brumoso", "Reacción al recibir daño: invisible y teletransporte de 60 pies"),
-          f(10, "Defensas seductoras", "Inmune a ser hechizado; puedes reflejar el intento"),
-          f(14, "Delirio oscuro", "Hechiza o asusta 1 minuto en una ilusión (SAB anula)"),
-        ],
-      },
-      {
-        name: "El Primigenio",
-        features: [
-          f(1, "Mente despierta", "Telepatía con cualquier criatura a 30 pies"),
-          f(6, "Escudo entrópico", "Impone desventaja a un ataque; si falla, ventaja en tu siguiente ataque"),
-          f(10, "Pensamiento leviatán", "Resistencia psíquica; quien te lea la mente recibe daño"),
-          f(14, "Crear esclavo", "Hechizas permanentemente a un humanoide incapacitado"),
         ],
       },
     ],
@@ -173,66 +137,6 @@ export const CLASS_CONTENT: Record<string, ClassContent> = {
           f(17, "Sanación suprema", "Tus curaciones con dados curan siempre el máximo"),
         ],
       },
-      {
-        name: "Dominio de la Luz",
-        features: [
-          f(1, "Llamarada protectora", "Reacción: desventaja al ataque de un enemigo que veas"),
-          f(2, "Canalizar: Resplandor del alba", "2d10 + nivel radiante a 30 pies y disipa oscuridad (CON mitad)"),
-          f(6, "Llamarada mejorada", "También puedes proteger a aliados con la llamarada"),
-          f(8, "Golpe potente", "+1d8 radiante al daño de tus trucos y conjuros (2d8 a nv 14)"),
-          f(17, "Corona de luz", "Luz solar 60 pies; desventaja a salvaciones contra tus conjuros de fuego y radiantes"),
-        ],
-      },
-      {
-        name: "Dominio de la Guerra",
-        features: [
-          f(1, "Sacerdote de guerra", "Ataque con arma como acción adicional, SAB veces al día"),
-          f(2, "Canalizar: Golpe guiado", "+10 a una tirada de ataque tuya"),
-          f(6, "Canalizar: Bendición del dios de la guerra", "+10 al ataque de un aliado (reacción)"),
-          f(8, "Golpe divino", "+1d8 del tipo del arma 1/turno (2d8 a nv 14)"),
-          f(17, "Avatar de batalla", "Resistencia al daño contundente, perforante y cortante no mágico"),
-        ],
-      },
-      {
-        name: "Dominio de la Tempestad",
-        features: [
-          f(1, "Ira de la tormenta", "Reacción: 2d8 eléctrico o de trueno a quien te golpee a 5 pies (DES mitad)"),
-          f(2, "Canalizar: Ira destructiva", "Tu daño eléctrico o de trueno hace el máximo"),
-          f(6, "Golpe de trueno", "Empujas 10 pies a quien dañes con electricidad"),
-          f(8, "Golpe divino", "+1d8 de trueno con armas 1/turno (2d8 a nv 14)"),
-          f(17, "Tormenta viviente", "Velocidad de vuelo igual a tu velocidad en exteriores"),
-        ],
-      },
-      {
-        name: "Dominio del Conocimiento",
-        features: [
-          f(1, "Bendiciones del conocimiento", "2 idiomas y doble competencia en 2 habilidades de INT"),
-          f(2, "Canalizar: Conocimiento de las eras", "10 min de competencia en una habilidad o herramienta"),
-          f(6, "Canalizar: Leer pensamientos", "Lee la mente de una criatura (SAB anula) y lánzale Sugestión"),
-          f(8, "Golpe potente", "+1d8 al daño de tus trucos (2d8 a nv 14)"),
-          f(17, "Visiones del pasado", "Visiones meditando sobre un objeto o lugar"),
-        ],
-      },
-      {
-        name: "Dominio de la Naturaleza",
-        features: [
-          f(1, "Acólito de la naturaleza", "Un truco de druida y competencia extra (armadura pesada incluida)"),
-          f(2, "Canalizar: Hechizar animales y plantas", "Hechiza bestias y plantas a 30 pies (SAB anula)"),
-          f(6, "Amortiguar elementos", "Reacción: resistencia a ácido, frío, fuego, rayo o trueno a un aliado"),
-          f(8, "Golpe divino", "+1d8 de frío, fuego o eléctrico con armas 1/turno (2d8 a nv 14)"),
-          f(17, "Maestro de la naturaleza", "Ordena a las bestias y plantas hechizadas"),
-        ],
-      },
-      {
-        name: "Dominio del Engaño",
-        features: [
-          f(1, "Bendición del embaucador", "Ventaja en Sigilo a un aliado durante 1 hora"),
-          f(2, "Canalizar: Duplicado ilusorio", "Ilusión de ti mismo; lanza conjuros desde ella"),
-          f(6, "Canalizar: Manto de sombras", "Te vuelves invisible hasta el final de tu próximo turno"),
-          f(8, "Golpe divino", "+1d8 de veneno con armas 1/turno (2d8 a nv 14)"),
-          f(17, "Duplicados mejorados", "Hasta 4 duplicados ilusorios"),
-        ],
-      },
     ],
   },
   Druida: {
@@ -255,15 +159,6 @@ export const CLASS_CONTENT: Record<string, ClassContent> = {
           f(6, "Zancada por la tierra", "El terreno difícil natural no te frena; inmune a plantas mágicas hostiles"),
           f(10, "Protección de la naturaleza", "Inmune a veneno y enfermedad; los feéricos no te hechizan"),
           f(14, "Santuario natural", "Bestias y plantas dudan en atacarte (SAB o pierden el ataque)"),
-        ],
-      },
-      {
-        name: "Círculo de la Luna",
-        features: [
-          f(2, "Forma salvaje de combate", "Transfórmate como acción adicional; bestias hasta VD 1"),
-          f(6, "Golpes primigenios", "Tus ataques en forma salvaje cuentan como mágicos; formas hasta VD nivel/3"),
-          f(10, "Forma salvaje elemental", "Gasta 2 usos para transformarte en elemental de aire, tierra, fuego o agua"),
-          f(14, "Mil formas", "Alterar el propio aspecto a voluntad"),
         ],
       },
     ],
@@ -295,15 +190,6 @@ export const CLASS_CONTENT: Record<string, ClassContent> = {
           f(15, "Defensa superior", "Evasión, Resistir la marea o Esquiva asombrosa"),
         ],
       },
-      {
-        name: "Señor de las Bestias",
-        features: [
-          f(3, "Compañero animal", "Una bestia VD ¼ lucha a tus órdenes"),
-          f(7, "Entrenamiento excepcional", "Tu bestia Esprinta, se Retira o Esquiva con tu acción adicional"),
-          f(11, "Furia bestial", "Tu bestia ataca dos veces cuando le ordenas atacar"),
-          f(15, "Compartir conjuros", "Tus conjuros de «tú mismo» también afectan a tu bestia"),
-        ],
-      },
     ],
   },
   Guerrero: {
@@ -328,27 +214,6 @@ export const CLASS_CONTENT: Record<string, ClassContent> = {
           f(18, "Superviviente", "Al inicio de tu turno con menos de la mitad de PG, recuperas 5 + CON"),
         ],
       },
-      {
-        name: "Maestro de Batalla",
-        features: [
-          f(3, "Superioridad en combate", "4 dados de superioridad (d8) y 3 maniobras: Derribar, Desarmar…"),
-          f(7, "Conoce a tu enemigo", "Estudia a una criatura: sabes si es superior a ti en FUE, CA, PG…"),
-          f(10, "Maniobras mejoradas", "Dados de superioridad d10 y más maniobras"),
-          f(15, "Implacable", "Recuperas un dado de superioridad al tirar iniciativa sin ninguno"),
-          f(18, "Dados superiores", "Dados de superioridad d12"),
-        ],
-      },
-      {
-        name: "Caballero Sobrenatural",
-        features: [
-          f(3, "Lanzamiento de conjuros", "Conjuros de la lista del mago usando Inteligencia (hasta nv 4)"),
-          f(3, "Vínculo con el arma", "Tu arma vinculada no puede ser desarmada y acude a tu mano"),
-          f(7, "Magia de guerra", "Tras lanzar un truco, un ataque con arma como acción adicional"),
-          f(10, "Golpe sobrenatural", "Quien recibe tu ataque tiene desventaja contra tu próximo conjuro"),
-          f(15, "Carga arcana", "Teletransporte de 30 pies al usar Oleada de acción"),
-          f(18, "Magia de guerra mejorada", "Tras cualquier conjuro, un ataque con arma como adicional"),
-        ],
-      },
     ],
   },
   Hechicero: {
@@ -371,16 +236,6 @@ export const CLASS_CONTENT: Record<string, ClassContent> = {
           f(18, "Presencia dracónica", "Aura de 60 pies que asombra o asusta (SAB anula)"),
         ],
       },
-      {
-        name: "Magia Salvaje",
-        features: [
-          f(1, "Oleada de magia salvaje", "Tus conjuros pueden desatar un efecto aleatorio (tabla d100)"),
-          f(1, "Mareas de caos", "Ventaja en una tirada; se recarga al sufrir una oleada"),
-          f(6, "Doblar la suerte", "Reacción: ±1d4 a la tirada de otra criatura (1 punto)"),
-          f(14, "Caos controlado", "Tira dos veces en la tabla de oleada y elige"),
-          f(18, "Bombardeo hechicero", "Tus dados de daño máximos se vuelven a tirar y suman"),
-        ],
-      },
     ],
   },
   Mago: {
@@ -395,75 +250,12 @@ export const CLASS_CONTENT: Record<string, ClassContent> = {
     ],
     subclasses: [
       {
-        name: "Escuela de Abjuración",
-        features: [
-          f(2, "Custodia arcana", "Escudo de PG que absorbe daño al lanzar abjuraciones"),
-          f(6, "Custodia proyectada", "Reacción: tu custodia absorbe el daño de un aliado"),
-          f(10, "Abjuración mejorada", "+competencia a Contrahechizo y Disipar magia"),
-          f(14, "Resistencia a conjuros", "Ventaja en salvaciones contra conjuros; resistencia a su daño"),
-        ],
-      },
-      {
-        name: "Escuela de Adivinación",
-        features: [
-          f(2, "Portento", "Tira 2d20 al descansar; sustituye cualquier tirada por ellos"),
-          f(6, "Adivinación experta", "Recuperas espacios al lanzar adivinaciones de nv 2+"),
-          f(10, "El tercer ojo", "Visión en la oscuridad, ver invisible o leer cualquier idioma"),
-          f(14, "Portento mayor", "3 tiradas de portento"),
-        ],
-      },
-      {
-        name: "Escuela de Conjuración",
-        features: [
-          f(2, "Conjuración menor", "Crea un objeto simple de hasta 10 lb"),
-          f(6, "Transposición benigna", "Teletransporte de 30 pies o intercambio con un aliado"),
-          f(10, "Conjuración centrada", "El daño no rompe tu concentración en conjuraciones"),
-          f(14, "Convocación duradera", "Tus criaturas convocadas no desaparecen al perder concentración"),
-        ],
-      },
-      {
-        name: "Escuela de Encantamiento",
-        features: [
-          f(2, "Mirada hipnótica", "Hechiza a una criatura adyacente mientras la mires"),
-          f(6, "Encantamiento instintivo", "Reacción: desvía a otro objetivo el ataque que te lanzan"),
-          f(10, "Dividir encantamiento", "Tus encantamientos de un objetivo afectan a dos"),
-          f(14, "Alterar recuerdos", "La criatura hechizada olvida lo que le hiciste"),
-        ],
-      },
-      {
         name: "Escuela de Evocación",
         features: [
           f(2, "Esculpir conjuros", "Tus aliados superan automáticamente tus áreas de daño"),
           f(6, "Truco potente", "Tus trucos hacen medio daño incluso si fallan la salvación"),
           f(10, "Evocación potenciada", "+INT al daño de tus evocaciones"),
           f(14, "Sobrecarga", "Daño máximo con evocaciones de nv 5 o menos (con riesgo)"),
-        ],
-      },
-      {
-        name: "Escuela de Ilusión",
-        features: [
-          f(2, "Ilusión menor mejorada", "Sonido e imagen a la vez con el truco"),
-          f(6, "Ilusiones maleables", "Cambia tus ilusiones con una acción"),
-          f(10, "Yo ilusorio", "Reacción: un duplicado absorbe un ataque que te impactaría"),
-          f(14, "Realidad ilusoria", "Haz real un objeto de tus ilusiones durante 1 minuto"),
-        ],
-      },
-      {
-        name: "Escuela de Nigromancia",
-        features: [
-          f(2, "Cosecha sombría", "Recuperas PG al matar con conjuros"),
-          f(6, "Servidumbre no muerta", "Tus esqueletos y zombis tienen más PG y daño"),
-          f(10, "Curtido contra la no-muerte", "Resistencia necrótica; tus PG máximos no pueden reducirse"),
-          f(14, "Dominar muertos vivientes", "Toma el control de un muerto viviente (CAR anula)"),
-        ],
-      },
-      {
-        name: "Escuela de Transmutación",
-        features: [
-          f(2, "Alquimia menor", "Transforma un material en otro (madera en piedra…)"),
-          f(6, "Piedra del transmutador", "Piedra con un beneficio: velocidad, resistencia, visión…"),
-          f(10, "Cambiaformas", "Lanza Polimorfar sobre ti sin gastar espacio"),
-          f(14, "Maestro transmutador", "Gran transmutación: rejuvenecer, restaurar, transmutar rocas…"),
         ],
       },
     ],
@@ -501,22 +293,6 @@ export const CLASS_CONTENT: Record<string, ClassContent> = {
           f(17, "Palma temblorosa", "Vibraciones letales: reduce a 0 PG (CON: 10d10 en su lugar)"),
         ],
       },
-      {
-        name: "Camino de la Sombra",
-        features: [
-          f(3, "Artes de la sombra", "2 ki: Oscuridad, Visión en la oscuridad, Pasar sin rastro o Silencio"),
-          f(6, "Paso sombrío", "Teletransporte de 60 pies entre sombras; ventaja en el siguiente ataque"),
-          f(11, "Manto de sombras", "Invisible en penumbra u oscuridad"),
-          f(17, "Oportunista", "Reacción: golpea a quien reciba un ataque de otro a 5 pies de ti"),
-        ],
-      },
-      {
-        name: "Camino de los Cuatro Elementos",
-        features: [
-          f(3, "Disciplinas elementales", "Gasta ki en efectos de aire, agua, fuego y tierra"),
-          f(6, "Disciplina adicional", "Nueva disciplina elemental (otra a nv 11 y 17)"),
-        ],
-      },
     ],
   },
   Paladín: {
@@ -547,26 +323,6 @@ export const CLASS_CONTENT: Record<string, ClassContent> = {
           f(20, "Nimbo sagrado", "Luz solar: 10 radiante a enemigos y ventaja contra magia infernal"),
         ],
       },
-      {
-        name: "Juramento de los Antiguos",
-        features: [
-          f(3, "Canalizar: Ira de la naturaleza", "Enredaderas espectrales apresan (FUE/DES anula)"),
-          f(3, "Canalizar: Expulsar a los infieles", "Expulsa feéricos e infernales (SAB anula)"),
-          f(7, "Aura de custodia", "Tú y tus aliados a 10 pies: resistencia al daño de conjuros"),
-          f(15, "Centinela imperecedero", "Al caer a 0 PG, quédate a 1, una vez al día"),
-          f(20, "Campeón antiguo", "Forma de fuerza natural: regeneración y conjuros acelerados"),
-        ],
-      },
-      {
-        name: "Juramento de Venganza",
-        features: [
-          f(3, "Canalizar: Abjurar enemigo", "Asusta y frena a una criatura (SAB parcial)"),
-          f(3, "Canalizar: Voto de enemistad", "Ventaja en ataques contra un objetivo 1 minuto"),
-          f(7, "Vengador implacable", "Tras un ataque de oportunidad, muévete media velocidad gratis"),
-          f(15, "Alma de venganza", "Reacción: ataque contra tu enemigo jurado cuando ataca"),
-          f(20, "Ángel vengador", "Alas, vuelo 60 pies y aura que asusta 1 hora"),
-        ],
-      },
     ],
   },
   Pícaro: {
@@ -595,26 +351,6 @@ export const CLASS_CONTENT: Record<string, ClassContent> = {
           f(9, "Sigilo supremo", "Ventaja en Sigilo si te mueves media velocidad o menos"),
           f(13, "Usar objeto mágico", "Ignoras los requisitos de clase y raza de los objetos mágicos"),
           f(17, "Reflejos de ladrón", "Dos turnos en la primera ronda de combate"),
-        ],
-      },
-      {
-        name: "Asesino",
-        features: [
-          f(3, "Asesinar", "Ventaja contra quien no haya actuado; críticos automáticos a sorprendidos"),
-          f(3, "Competencias adicionales", "Kit de disfraz y kit de envenenador"),
-          f(9, "Experto en infiltración", "Crea identidades falsas convincentes"),
-          f(13, "Impostor", "Imita el habla, la escritura y los gestos de otra persona"),
-          f(17, "Golpe mortal", "Duplica el daño contra criaturas sorprendidas (CON anula)"),
-        ],
-      },
-      {
-        name: "Embaucador Arcano",
-        features: [
-          f(3, "Lanzamiento de conjuros", "Conjuros de la lista del mago usando Inteligencia (hasta nv 4)"),
-          f(3, "Mano de mago mejorada", "Tu mano de mago es invisible: roba y planta objetos"),
-          f(9, "Emboscada mágica", "Desventaja a la salvación contra tu conjuro si estás oculto"),
-          f(13, "Embaucador versátil", "Ventaja en ataques contra el objetivo de tu mano de mago"),
-          f(17, "Ladrón de conjuros", "Reacción: roba el conjuro que te lanzan (fallando su salvación)"),
         ],
       },
     ],
@@ -692,7 +428,6 @@ export const SPELLS: SpellDef[] = [
   s(1, "Hechizar persona", "Ba Br Dr He Ma", "Un humanoide te considera amigo (SAB anula)"),
   s(1, "Heroísmo", "Ba Pa", "PG temporales cada turno e inmunidad al miedo (concentración)"),
   s(1, "Infligir heridas", "Cl", "3d10 necrótico por contacto"),
-  s(1, "Maleficio", "Br", "+1d6 necrótico al dañar al objetivo y desventaja en una característica"),
   s(1, "Manos ardientes", "He Ma", "3d6 fuego en cono de 15 pies (DES mitad)"),
   s(1, "Marca del cazador", "Ex", "+1d6 al daño contra tu presa (concentración)"),
   s(1, "Niebla oscura", "Dr Ex He Ma", "Esfera de niebla de 20 pies que bloquea la visión"),
@@ -701,7 +436,6 @@ export const SPELLS: SpellDef[] = [
   s(1, "Perdición", "Ba Cl", "−1d4 a ataques y salvaciones de hasta 3 criaturas (CAR anula)"),
   s(1, "Protección contra el bien y el mal", "Br Cl Ma Pa", "Protege contra aberraciones, infernales, no muertos…"),
   s(1, "Proyectil mágico", "He Ma", "3 dardos de 1d4+1 fuerza que impactan siempre"),
-  s(1, "Rayo de brujería", "Br He Ma", "1d12 eléctrico continuo mientras mantengas el rayo"),
   s(1, "Rociada de color", "Ba He Ma", "6d10 PG de criaturas quedan cegadas 1 ronda"),
   s(1, "Salto", "Dr Ex He Ma", "Triplica la distancia de salto de una criatura"),
   s(1, "Santuario", "Cl", "Para atacar al protegido hay que superar una salvación de SAB"),
@@ -859,13 +593,11 @@ export const SPELL_ATTACK_RANGES: Record<string, number> = {
   "Dormir": 90,
   "Hechizar persona": 30,
   "Infligir heridas": 5,
-  "Maleficio": 90,
   "Manos ardientes": 15,
   "Ola atronadora": 15,
   "Palabra de curación": 60,
   "Perdición": 30,
   "Proyectil mágico": 120,
-  "Rayo de brujería": 30,
   "Rociada de color": 60,
   // Nivel 2
   "Arma espiritual": 60,

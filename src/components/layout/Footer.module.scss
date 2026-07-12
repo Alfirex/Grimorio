@@ -170,3 +170,29 @@ $stones: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width
     text-transform: uppercase;
   }
 }
+
+// Letra pequeña legal: atribución CC BY del SRD y descargo de marca
+.legal {
+  border-top: 1px solid rgba(0, 0, 0, 0.4);
+  margin: 0 auto;
+  padding: 0.7rem 3.5rem 1rem;
+
+  p {
+    color: #b9ac90;
+    font-size: 0.68rem;
+    line-height: 1.5;
+    margin: 0 auto 0.25rem;
+    max-width: 1100px;
+    text-align: center;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+  }
+
+  a {
+    color: #d8cbae;
+    text-decoration: underline;
+
+    &:hover {
+      color: $color-gold-light;
+    }
+  }
+}

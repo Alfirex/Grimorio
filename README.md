@@ -1,6 +1,6 @@
-# ⚔ Grimorio — Gestor de partidas de D&D
+# ⚔ Grimorio — Mesa virtual de rol 5e
 
-Aplicación web para gestionar partidas de Dungeons & Dragons 5e: fichas de personaje completas,
+Aplicación web para gestionar partidas de rol compatibles con 5e (SRD 5.1): fichas de personaje completas,
 campañas con código de invitación, notas del máster, rastreador de iniciativa, tirador de dados,
 generador procedural de mapas de mazmorra y tablero virtual con fichas en tiempo real.
 
@@ -68,7 +68,7 @@ src/
 │   └── map-generator/    # Generador de mazmorras
 ├── components/           # Componentes por dominio (character, campaign, dice…)
 ├── context/              # AuthContext (sesión de Firebase)
-├── data/                 # Datos de D&D 5e (clases, razas, habilidades…)
+├── data/                 # Datos 5e del SRD (clases, razas, habilidades…)
 ├── lib/                  # Inicialización de Firebase y acceso a Firestore
 ├── styles/               # Variables y mixins SCSS del tema
 ├── types/                # Tipos compartidos
@@ -83,3 +83,50 @@ Las reglas de `firestore.rules` garantizan que:
 - Las fichas solo las ven su dueño y los miembros de su campaña.
 - Las notas privadas del máster no son legibles por el jugador ni siquiera llamando a la API directamente.
 - Solo el DM puede modificar una campaña; los miembros únicamente pueden mover fichas del tablero, y cualquier usuario autenticado solo puede añadirse a sí mismo con el código de invitación.
+
+## Licencia del contenido
+
+- Este proyecto incluye material del **System Reference Document 5.1** («SRD 5.1») de
+  Wizards of the Coast LLC, disponible en
+  [dnd.wizards.com/resources/systems-reference-document](https://dnd.wizards.com/resources/systems-reference-document)
+  y licenciado bajo
+  [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/legalcode).
+  La atribución exigida por la licencia se muestra en el pie de todas las páginas.
+- Solo se usa contenido del SRD: una subclase por clase, las razas y conjuros del SRD y
+  criaturas del SRD. El panteón de deidades, los rasgos de trasfondo y todos los textos
+  descriptivos son **originales de Grimorio**.
+- Grimorio no está afiliado a Wizards of the Coast ni cuenta con su respaldo.
+  «Dungeons & Dragons» y «D&D» son marcas de Wizards of the Coast LLC; este proyecto
+  solo las menciona de forma descriptiva para indicar compatibilidad.
+- Los retratos del bestiario se sirven desde [dnd5eapi.co](https://www.dnd5eapi.co)
+  (proyecto comunitario sobre el SRD); si una imagen no carga, se muestra un emoji.
+
+## Anuncios (opcional, gratis)
+
+La app trae integración con **Google AdSense** desactivada por defecto. Para activarla:
+
+1. Crea una cuenta gratuita en [AdSense](https://adsense.google.com) y da de alta tu dominio.
+2. Añade tu identificador de editor a las variables de entorno del despliegue:
+
+   ```bash
+   NEXT_PUBLIC_ADSENSE_CLIENT=ca-pub-XXXXXXXXXXXXXXXX
+   ```
+
+3. Crea el archivo `public/ads.txt` con la línea que te indica AdSense:
+
+   ```
+   google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
+   ```
+
+4. En el panel de AdSense activa los **anuncios automáticos** para tu sitio y, en
+   «Privacidad y mensajes», el **mensaje de consentimiento** (obligatorio para visitantes
+   de la UE por el RGPD). Sin la variable de entorno, la app no carga ningún script de
+   anuncios.
+
+### Alojamiento gratuito compatible con anuncios
+
+- **Cloudflare Pages** y **Netlify**: gratis y permiten uso comercial (anuncios). ✅
+- **Firebase Hosting/App Hosting**: el runtime de Next.js requiere el plan Blaze
+  (con tramo gratuito, pide tarjeta).
+- **Vercel (plan Hobby)**: gratuito pero **prohíbe uso comercial**, anuncios incluidos;
+  no lo uses si monetizas. ⚠️

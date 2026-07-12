@@ -60,9 +60,9 @@ function CampaignView({ campaignId }: { campaignId: string }) {
   useEffect(() => {
     document.title = myTurn
       ? "⚔ ¡Tu turno! — Grimorio"
-      : "Grimorio — Gestor de partidas de D&D";
+      : "Grimorio — Mesa virtual de rol 5e";
     return () => {
-      document.title = "Grimorio — Gestor de partidas de D&D";
+      document.title = "Grimorio — Mesa virtual de rol 5e";
     };
   }, [myTurn]);
 

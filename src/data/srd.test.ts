@@ -107,7 +107,7 @@ describe("maxSpellLevelFor", () => {
 });
 
 describe("spellSlotsFor", () => {
-  it("coincide con la tabla del Manual del Jugador", () => {
+  it("coincide con la tabla de espacios del SRD", () => {
     expect(spellSlotsFor("Mago", "", 1)).toEqual([2, 0, 0, 0, 0, 0, 0, 0, 0]);
     expect(spellSlotsFor("Mago", "", 5)).toEqual([4, 3, 2, 0, 0, 0, 0, 0, 0]);
     expect(spellSlotsFor("Mago", "", 20)).toEqual([4, 3, 3, 3, 3, 2, 2, 1, 1]);
@@ -132,7 +132,7 @@ describe("CLASS_CONTENT / featuresFor", () => {
   it("las 12 clases tienen subclases y rasgos", () => {
     expect(Object.keys(CLASS_CONTENT)).toHaveLength(12);
     for (const [name, content] of Object.entries(CLASS_CONTENT)) {
-      expect(content.subclasses.length, name).toBeGreaterThan(1);
+      expect(content.subclasses.length, name).toBeGreaterThanOrEqual(1);
       expect(content.features.length, name).toBeGreaterThan(3);
     }
   });

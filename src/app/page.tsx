@@ -127,9 +127,9 @@ export default function LandingPage() {
         </div>
 
         <p className={styles.subtitle}>
-          La mesa virtual de <strong>Dungeons &amp; Dragons 5e</strong> en español: fichas
-          guiadas por el reglamento, tablero táctico en tiempo real y todo lo que una
-          campaña necesita, en un solo lugar.
+          La mesa virtual de rol <strong>compatible con 5e</strong> (SRD 5.1) en español:
+          fichas guiadas por el reglamento, tablero táctico en tiempo real y todo lo que
+          una campaña necesita, en un solo lugar.
         </p>
         <div className={styles.badges}>
           <span className={styles.badge}>Gratis</span>
