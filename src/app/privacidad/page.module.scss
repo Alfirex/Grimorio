@@ -50,3 +50,15 @@
     color: $color-gold-light;
   }
 }
+
+.operatorNote {
+  border: 1px dashed rgba($color-blood-light, 0.6);
+  border-radius: 6px;
+  color: $color-blood-light !important;
+  font-style: italic;
+  padding: 0.6rem 0.8rem;
+
+  code {
+    font-family: monospace;
+  }
+}

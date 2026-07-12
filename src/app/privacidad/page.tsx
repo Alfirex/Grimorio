@@ -59,13 +59,46 @@ export default function PrivacyPage() {
         envía correos.
       </p>
 
+      <h2 className="section-title">Dónde se procesan los datos</h2>
+      <p>
+        Los servicios de Google (Firebase y, en su caso, AdSense) pueden procesar datos
+        en la Unión Europea y en Estados Unidos. Google participa en el EU-U.S. Data
+        Privacy Framework, el mecanismo que ampara esas transferencias conforme al RGPD.
+      </p>
+
+      <h2 className="section-title">Contenido subido por los usuarios</h2>
+      <p>
+        Los retratos, láminas y textos que los usuarios suben a sus mesas son
+        responsabilidad de quien los sube, que declara tener derecho a usarlos. Si
+        encuentras en una mesa contenido que infringe tus derechos o la ley, comunícalo
+        al contacto de abajo y será retirado.
+      </p>
+
       <h2 className="section-title">Tus derechos</h2>
       <p>
         Puedes borrar tus personajes y campañas desde la propia aplicación en cualquier
         momento. Para ejercer los derechos de acceso, rectificación o supresión sobre tu
-        cuenta (RGPD), contacta con quien opera esta instancia de Grimorio; la forma de
-        contacto se indica en la página del proyecto.
+        cuenta (RGPD), usa el contacto del titular.
       </p>
+
+      <h2 className="section-title">Titular y contacto</h2>
+      {process.env.NEXT_PUBLIC_CONTACT_EMAIL ? (
+        <p>
+          Esta instancia de Grimorio la opera su titular, con contacto en{" "}
+          <a href={`mailto:${process.env.NEXT_PUBLIC_CONTACT_EMAIL}`}>
+            {process.env.NEXT_PUBLIC_CONTACT_EMAIL}
+          </a>
+          , tanto para cuestiones de privacidad como para solicitudes de retirada de
+          contenido.
+        </p>
+      ) : (
+        <p className={styles.operatorNote}>
+          ⚠ Instancia sin contacto configurado: quien opere este despliegue debe definir
+          la variable de entorno <code>NEXT_PUBLIC_CONTACT_EMAIL</code> para cumplir con
+          la normativa de servicios de internet si publica el sitio (especialmente con
+          anuncios).
+        </p>
+      )}
 
       <h2 className="section-title">Cambios</h2>
       <p>

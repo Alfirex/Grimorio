@@ -121,6 +121,19 @@ y compártelo libremente.
 - Los retratos del bestiario se sirven desde [dnd5eapi.co](https://www.dnd5eapi.co)
   (proyecto comunitario sobre el SRD); si una imagen no carga, se muestra un emoji.
 
+## Antes de publicar: lista legal
+
+1. **Contacto del titular**: define `NEXT_PUBLIC_CONTACT_EMAIL` en el despliegue. Se
+   muestra en `/privacidad` y es necesario para la normativa de servicios de internet
+   (LSSI) en cuanto el sitio tiene anuncios, además de servir para el RGPD y las
+   solicitudes de retirada de contenido subido por usuarios.
+2. **Reglas de Firestore**: pega el `firestore.rules` de esta versión en la consola de
+   Firebase (código y reglas van emparejados).
+3. Si activas anuncios: variable de AdSense, `public/ads.txt` y el **mensaje de
+   consentimiento** desde el panel de AdSense (ver sección siguiente).
+4. La atribución del SRD 5.1 y la política de privacidad ya van incluidas en el pie de
+   todas las páginas; no las quites al personalizar.
+
 ## Anuncios (opcional, gratis)
 
 La app trae integración con **Google AdSense** desactivada por defecto. Para activarla:
