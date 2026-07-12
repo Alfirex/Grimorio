@@ -84,7 +84,12 @@ Las reglas de `firestore.rules` garantizan que:
 - Las notas privadas del máster no son legibles por el jugador ni siquiera llamando a la API directamente.
 - Solo el DM puede modificar una campaña; los miembros únicamente pueden mover fichas del tablero, y cualquier usuario autenticado solo puede añadirse a sí mismo con el código de invitación.
 
-## Licencia del contenido
+## Licencia
+
+El **código** de Grimorio se publica bajo la [licencia MIT](./LICENSE): úsalo, modifícalo
+y compártelo libremente.
+
+### Licencia del contenido de juego
 
 - Este proyecto incluye material del **System Reference Document 5.1** («SRD 5.1») de
   Wizards of the Coast LLC, disponible en
