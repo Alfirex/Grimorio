@@ -118,8 +118,9 @@ y compártelo libremente.
 - Grimorio no está afiliado a Wizards of the Coast ni cuenta con su respaldo.
   «Dungeons & Dragons» y «D&D» son marcas de Wizards of the Coast LLC; este proyecto
   solo las menciona de forma descriptiva para indicar compatibilidad.
-- Los retratos del bestiario se sirven desde [dnd5eapi.co](https://www.dnd5eapi.co)
-  (proyecto comunitario sobre el SRD); si una imagen no carga, se muestra un emoji.
+- Los retratos del bestiario son **opcionales y vienen apagados**: dnd5eapi.co (proyecto
+  comunitario) no declara la licencia de sus imágenes, así que por defecto se usan
+  emojis. Si quieres activarlos bajo tu criterio: `NEXT_PUBLIC_MONSTER_IMAGES=on`.
 
 ## Antes de publicar: lista legal
 

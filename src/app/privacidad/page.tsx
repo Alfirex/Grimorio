@@ -33,8 +33,9 @@ export default function PrivacyPage() {
         </li>
         <li>
           <strong>Imágenes:</strong> los retratos que subes se guardan comprimidos junto
-          a tus datos de juego. Las ilustraciones del bestiario se cargan desde el
-          proyecto comunitario dnd5eapi.co, que puede ver tu dirección IP al servirlas.
+          a tus datos de juego. Si el operador activa las ilustraciones del
+          bestiario, se cargan desde el proyecto comunitario dnd5eapi.co, que puede ver
+          tu dirección IP al servirlas; por defecto están desactivadas.
         </li>
       </ul>
 

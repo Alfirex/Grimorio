@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { RequireAuth } from "@/components/auth/RequireAuth";
-import { BESTIARY, type MonsterDef } from "@/data/bestiary";
+import { BESTIARY, MONSTER_IMAGES_ENABLED, type MonsterDef } from "@/data/bestiary";
 import { SPELL_LEVEL_LABELS } from "@/data/dnd5e";
 import { SPELLS, spellRangeFor } from "@/data/srd";
 import styles from "./page.module.scss";
@@ -163,7 +163,7 @@ function MonsterEntry({ monster }: { monster: MonsterDef }) {
   return (
     <article className={`panel ${styles.monster}`}>
       <div className={styles.monsterTop}>
-        {!imgError ? (
+        {MONSTER_IMAGES_ENABLED && !imgError ? (
           <Image
             src={monster.image}
             alt={monster.name}

@@ -19,6 +19,14 @@ export interface MonsterDef {
   emoji: string; // respaldo si la imagen no carga
 }
 
+/**
+ * Las ilustraciones de dnd5eapi.co no declaran licencia ni procedencia, así
+ * que van apagadas por defecto: sin la variable se usan los emojis. Quien
+ * opere la instancia decide activarlas bajo su criterio.
+ */
+export const MONSTER_IMAGES_ENABLED =
+  process.env.NEXT_PUBLIC_MONSTER_IMAGES === "on";
+
 const img = (slug: string) =>
   `https://www.dnd5eapi.co/api/images/monsters/${slug}.png`;
 

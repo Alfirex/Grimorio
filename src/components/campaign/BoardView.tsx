@@ -22,7 +22,7 @@ import {
   updateCharacter,
   upsertBoardToken,
 } from "@/lib/db";
-import { BESTIARY, type MonsterDef } from "@/data/bestiary";
+import { BESTIARY, MONSTER_IMAGES_ENABLED, type MonsterDef } from "@/data/bestiary";
 import { CONDITIONS, conditionEmoji, inferAttackRange } from "@/data/dnd5e";
 import { spellRangeFor } from "@/data/srd";
 import { formatModifier, savingThrowBonus } from "@/utils/character";
@@ -508,7 +508,7 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
       abilities: monster.abilities,
       loot: monster.loot,
       xp: monster.xp,
-      image: monster.image,
+      ...(MONSTER_IMAGES_ENABLED && { image: monster.image }),
     });
   };
 
@@ -1377,7 +1377,9 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
                 const unconscious = down && Boolean(token.characterId);
                 const hidden = isDM && hiddenFromPlayers(token);
                 // Retrato: avatar del personaje (jugadores) o ilustración del bestiario
-                const portrait = characterOf(token)?.avatar || token.image;
+                const portrait =
+                  characterOf(token)?.avatar ||
+                  (MONSTER_IMAGES_ENABLED ? token.image : undefined);
                 const conditions = token.conditions ?? [];
                 return (
                   <div
@@ -1668,7 +1670,7 @@ function AttackPanel({
     <div className={styles.attackPanel}>
       <div className={styles.attackHeader}>
         <span className={styles.attackTitle}>
-          {attacker.image && (
+          {MONSTER_IMAGES_ENABLED && attacker.image && (
             <Image
               src={attacker.image}
               alt={attacker.name}
@@ -1921,7 +1923,7 @@ function MonsterCard({ monster }: { monster: MonsterDef }) {
 
   return (
     <div className={styles.monsterCard}>
-      {!imgError ? (
+      {MONSTER_IMAGES_ENABLED && !imgError ? (
         <Image
           src={monster.image}
           alt={monster.name}
