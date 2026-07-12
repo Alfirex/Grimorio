@@ -1,7 +1,7 @@
 import type { Attack } from "@/types";
 
 /**
- * Bestiario básico inspirado en el SRD de D&D 5e, ordenado por dificultad.
+ * Bestiario básico con criaturas del SRD 5.1, ordenado por dificultad.
  * `loot` es una expresión de dados de monedas de oro que suelta al morir;
  * `xp` son los PX que reparte al grupo cuando se saquea su sala.
  */

@@ -16,7 +16,7 @@ generador procedural de mapas de mazmorra y tablero virtual con fichas en tiempo
 |---|---|
 | 🔐 Login con Google | Cada usuario entra con su cuenta y gestiona sus propios personajes |
 | 📜 Ficha de personaje 5e | Características, salvaciones, 18 habilidades con competencia/pericia, combate, ataques con alcance, conjuros con espacios, equipo, monedas, deidad, personalidad e historia. Modificadores, bono de competencia, CD de conjuros y percepción pasiva se calculan solos |
-| 📖 Reglamento integrado | Subclases, rasgos de clase por nivel, 170+ conjuros con alcance y espacios de conjuro por clase y nivel (SRD 5e en español): todo se elige de listas en vez de escribirse a mano |
+| 📖 Reglamento integrado | Subclases, rasgos de clase por nivel, 165+ conjuros con alcance y espacios de conjuro por clase y nivel (SRD 5.1 en español): todo se elige de listas en vez de escribirse a mano |
 | 🌙 Descansos | Descanso corto (gastar dados de golpe) y largo (PG, espacios y salvaciones de muerte) con un clic |
 | ⭐ Experiencia y niveles | Los enemigos dan PX según su VD; al saquear se reparten entre el grupo y la ficha avisa cuando puedes subir de nivel, aplicando PG, rasgos nuevos y espacios de conjuro |
 | 🏰 Campañas | El máster crea la campaña y comparte un código de 6 letras; los jugadores se unen y asignan su personaje |

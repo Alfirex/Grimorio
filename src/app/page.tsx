@@ -12,7 +12,7 @@ const FEATURES = [
   {
     icon: "📜",
     title: "Fichas con el reglamento dentro",
-    text: "Clases, subclases, rasgos por nivel, 170+ conjuros, razas y trasfondos del SRD 5e en español: todo se elige de listas y los números se calculan solos.",
+    text: "Clases, subclases y razas del SRD 5.1 en español con rasgos por nivel, más de 165 conjuros, y trasfondos y panteón propios: todo se elige de listas y los números se calculan solos.",
   },
   {
     icon: "♟",
@@ -134,7 +134,7 @@ export default function LandingPage() {
         <div className={styles.badges}>
           <span className={styles.badge}>Gratis</span>
           <span className={styles.badge}>Sin instalación</span>
-          <span className={styles.badge}>SRD 5e en español</span>
+          <span className={styles.badge}>SRD 5.1 en español</span>
           <span className={styles.badge}>Tiempo real</span>
         </div>
         <button type="button" className={styles.tavernBtn} onClick={handleLogin}>

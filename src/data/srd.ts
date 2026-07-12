@@ -429,7 +429,6 @@ export const SPELLS: SpellDef[] = [
   s(1, "Heroísmo", "Ba Pa", "PG temporales cada turno e inmunidad al miedo (concentración)"),
   s(1, "Infligir heridas", "Cl", "3d10 necrótico por contacto"),
   s(1, "Manos ardientes", "He Ma", "3d6 fuego en cono de 15 pies (DES mitad)"),
-  s(1, "Marca del cazador", "Ex", "+1d6 al daño contra tu presa (concentración)"),
   s(1, "Niebla oscura", "Dr Ex He Ma", "Esfera de niebla de 20 pies que bloquea la visión"),
   s(1, "Ola atronadora", "Ba Dr He Ma", "2d8 trueno en 15 pies y empuja 10 pies (CON mitad)"),
   s(1, "Palabra de curación", "Ba Cl", "1d4 + característica PG a 60 pies (acción adicional)"),
@@ -521,7 +520,6 @@ export const SPELLS: SpellDef[] = [
   s(5, "Escudriñar", "Ba Br Cl Dr Ma", "Ves y oyes a una criatura en cualquier lugar (SAB anula)"),
   s(5, "Golpe flamígero", "Cl", "4d6 fuego + 4d6 radiante en columna de 10 pies (DES mitad)"),
   s(5, "Muro de piedra", "Dr He Ma", "Muro de piedra que puede hacerse permanente"),
-  s(5, "Onda destructiva", "Pa", "5d6 trueno + 5d6 radiante a 30 pies y derriba (CON anula)"),
   s(5, "Plaga de insectos", "Cl Dr He", "4d10 perforante en esfera de 20 pies (CON mitad)"),
   s(5, "Restablecimiento mayor", "Ba Cl Dr", "Elimina maldiciones, petrificación y drenados"),
   s(5, "Telequinesis", "He Ma", "Mueve criaturas u objetos de hasta 1000 lb con la mente"),
@@ -632,7 +630,6 @@ export const SPELL_ATTACK_RANGES: Record<string, number> = {
   "Curar heridas en masa": 60,
   "Dominar persona": 60,
   "Golpe flamígero": 60,
-  "Onda destructiva": 30,
   "Plaga de insectos": 300,
   "Telequinesis": 60,
   // Nivel 6
