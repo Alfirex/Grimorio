@@ -58,9 +58,27 @@ service cloud.firestore {
       }
     }
 
+    // Códigos de invitación: resuelven código → campaña sin exponer nada más
+    match /invites/{code} {
+      // Lectura puntual del código exacto; el listado queda prohibido
+      allow get: if signedIn();
+      allow list: if false;
+
+      // Solo el máster de la campaña referida puede publicar o retirar su código
+      allow create, update: if signedIn() &&
+        request.resource.data.keys().hasOnly(['campaignId']) &&
+        get(/databases/$(database)/documents/campaigns/$(request.resource.data.campaignId))
+          .data.dmUid == request.auth.uid;
+      allow delete: if signedIn() &&
+        get(/databases/$(database)/documents/campaigns/$(resource.data.campaignId))
+          .data.dmUid == request.auth.uid;
+    }
+
     match /campaigns/{campaignId} {
-      // La búsqueda por código de invitación necesita lectura para usuarios autenticados
-      allow read: if signedIn();
+      // Privadas: solo el máster y los miembros pueden leer la campaña
+      allow read: if signedIn() &&
+        (resource.data.dmUid == request.auth.uid ||
+         request.auth.uid in resource.data.memberUids);
 
       allow create: if signedIn() &&
         request.resource.data.dmUid == request.auth.uid &&

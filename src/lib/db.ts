@@ -6,10 +6,9 @@ import {
   deleteField,
   doc,
   getDoc,
-  getDocs,
-  limit,
   onSnapshot,
   query,
+  setDoc,
   updateDoc,
   where,
 } from "firebase/firestore";
@@ -143,22 +142,45 @@ export async function createCampaign(
     createdAt: Date.now(),
   };
   const ref = await addDoc(collection(getDb(), "campaigns"), campaign);
+  // El código se resuelve en /invites: así las campañas solo las leen sus miembros
+  await setDoc(doc(getDb(), "invites", campaign.inviteCode), { campaignId: ref.id });
   return ref.id;
 }
 
-export async function joinCampaignByCode(code: string, uid: string): Promise<Campaign> {
-  const q = query(
-    collection(getDb(), "campaigns"),
-    where("inviteCode", "==", code.trim().toUpperCase()),
-    limit(1)
-  );
-  const snapshot = await getDocs(q);
-  if (snapshot.empty) {
-    throw new Error("No existe ninguna campaña con ese código de invitación.");
+/**
+ * Garantiza que el código de la campaña existe en /invites. Migración para
+ * campañas creadas antes de endurecer las reglas de lectura; la llama el
+ * máster al abrir su campaña.
+ */
+export async function ensureCampaignInvite(campaign: Campaign): Promise<void> {
+  try {
+    await setDoc(
+      doc(getDb(), "invites", campaign.inviteCode),
+      { campaignId: campaign.id },
+      { merge: true }
+    );
+  } catch {
+    // Sin permisos (no es el DM) o sin red: el código ya existente sigue valiendo
   }
-  const campaignDoc = snapshot.docs[0];
-  await updateDoc(campaignDoc.ref, { memberUids: arrayUnion(uid) });
-  return { id: campaignDoc.id, ...campaignDoc.data() } as Campaign;
+}
+
+export async function joinCampaignByCode(code: string, uid: string): Promise<Campaign> {
+  const normalized = code.trim().toUpperCase();
+  const invite = await getDoc(doc(getDb(), "invites", normalized));
+  if (!invite.exists()) {
+    throw new Error(
+      "No existe ninguna campaña con ese código. Si la campaña es antigua, pide al máster que la abra una vez para reactivar su código."
+    );
+  }
+  const campaignId = (invite.data() as { campaignId: string }).campaignId;
+  const campaignRef = doc(getDb(), "campaigns", campaignId);
+  // Unirse solo añade tu uid; las reglas permiten esta escritura sin ser miembro
+  await updateDoc(campaignRef, { memberUids: arrayUnion(uid) });
+  const snapshot = await getDoc(campaignRef);
+  if (!snapshot.exists()) {
+    throw new Error("Esa campaña ya no existe.");
+  }
+  return { id: snapshot.id, ...snapshot.data() } as Campaign;
 }
 
 export function subscribeMyCampaigns(
@@ -180,7 +202,16 @@ export function subscribeCampaign(
   });
 }
 
-export async function deleteCampaign(id: string): Promise<void> {
+export async function deleteCampaign(id: string, inviteCode?: string): Promise<void> {
+  // El código de invitación se retira antes que la campaña (las reglas del
+  // invite comprueban que quien borra es el DM de la campaña referida)
+  if (inviteCode) {
+    try {
+      await deleteDoc(doc(getDb(), "invites", inviteCode));
+    } catch {
+      // El invite puede no existir en campañas antiguas
+    }
+  }
   await deleteDoc(doc(getDb(), "campaigns", id));
 }
 

@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import {
   deleteCampaign,
+  ensureCampaignInvite,
   subscribeCampaign,
   subscribeCampaignCharacters,
   updateCharacter,
@@ -56,6 +57,14 @@ function CampaignView({ campaignId }: { campaignId: string }) {
     : null;
   const myTurn = Boolean(myTurnCharacter);
 
+  // Migración: garantiza que el código de invitación existe en /invites
+  // (necesario para unirse desde que las campañas son privadas)
+  const isDMOfCampaign = Boolean(campaign && user && campaign.dmUid === user.uid);
+  useEffect(() => {
+    if (campaign && isDMOfCampaign) ensureCampaignInvite(campaign);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [campaign?.id, isDMOfCampaign]);
+
   // Con la pestaña en segundo plano, el título avisa de que te toca actuar
   useEffect(() => {
     document.title = myTurn
@@ -81,7 +90,7 @@ function CampaignView({ campaignId }: { campaignId: string }) {
   const handleDelete = async () => {
     if (!window.confirm(`¿Eliminar la campaña "${campaign.name}"? Los personajes no se borran.`))
       return;
-    await deleteCampaign(campaignId);
+    await deleteCampaign(campaignId, campaign.inviteCode);
     router.replace("/dashboard");
   };
 

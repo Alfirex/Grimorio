@@ -82,7 +82,12 @@ Las reglas de `firestore.rules` garantizan que:
 - Solo el dueño puede editar o borrar su personaje.
 - Las fichas solo las ven su dueño y los miembros de su campaña.
 - Las notas privadas del máster no son legibles por el jugador ni siquiera llamando a la API directamente.
+- Las campañas son privadas: solo el máster y sus miembros pueden leerlas. El código de
+  invitación se resuelve en una colección aparte (`/invites`), de lectura puntual y sin
+  listado, así que nadie puede curiosear campañas ajenas.
 - Solo el DM puede modificar una campaña; los miembros únicamente pueden mover fichas del tablero, y cualquier usuario autenticado solo puede añadirse a sí mismo con el código de invitación.
+- Migración: si una campaña se creó con reglas antiguas, su máster solo tiene que abrirla
+  una vez para que el código de invitación vuelva a funcionar.
 
 ## Licencia
 
