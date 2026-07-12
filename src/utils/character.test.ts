@@ -7,6 +7,7 @@ import {
   initiativeTotal,
   parseEquipmentText,
   passivePerception,
+  sanitizeImportedCharacter,
   proficiencyBonus,
   savingThrowBonus,
   skillBonus,
@@ -117,6 +118,63 @@ describe("parseEquipmentText", () => {
 
   it("con texto vacío no devuelve nada", () => {
     expect(parseEquipmentText("")).toEqual([]);
+  });
+});
+
+describe("sanitizeImportedCharacter", () => {
+  const blank = () => createBlankCharacter("uid", "Tester");
+
+  it("con basura devuelve una ficha en blanco válida", () => {
+    const result = sanitizeImportedCharacter("no soy un objeto", blank());
+    expect(result.name).toBe("");
+    expect(result.level).toBe(1);
+    expect(result.ownerUid).toBe("uid");
+    expect(result.spellSlots).toHaveLength(9);
+  });
+
+  it("nunca acepta datos de cuenta ni campaña del JSON", () => {
+    const result = sanitizeImportedCharacter(
+      { ownerUid: "atacante", campaignId: "ajena", name: "Elora" },
+      blank()
+    );
+    expect(result.ownerUid).toBe("uid");
+    expect(result.campaignId).toBeNull();
+    expect(result.name).toBe("Elora");
+  });
+
+  it("acota números, textos y arrays", () => {
+    const result = sanitizeImportedCharacter(
+      {
+        level: 999,
+        xp: -50,
+        maxHp: Infinity,
+        abilities: { str: 99, dex: "veinte" },
+        backstory: "x".repeat(100_000),
+        attacks: [
+          { name: "Espada", bonus: "+5", damage: "1d8", type: "Cortante", range: 999_999 },
+          "no soy un ataque",
+        ],
+        avatar: "javascript:alert(1)",
+      },
+      blank()
+    );
+    expect(result.level).toBe(20);
+    expect(result.xp).toBe(0);
+    expect(result.maxHp).toBe(10);
+    expect(result.abilities.str).toBe(30);
+    expect(result.abilities.dex).toBe(10);
+    expect(result.backstory).toHaveLength(20_000);
+    expect(result.attacks).toHaveLength(1);
+    expect(result.attacks[0].range).toBe(5280);
+    expect(result.avatar).toBeUndefined();
+  });
+
+  it("los espacios usados nunca superan el total", () => {
+    const result = sanitizeImportedCharacter(
+      { spellSlots: [{ total: 2, used: 99 }] },
+      blank()
+    );
+    expect(result.spellSlots[0]).toEqual({ total: 2, used: 2 });
   });
 });
 

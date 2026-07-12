@@ -13,7 +13,7 @@ import {
   subscribeMyCharacters,
 } from "@/lib/db";
 import { levelForXp } from "@/data/dnd5e";
-import { createBlankCharacter } from "@/utils/character";
+import { createBlankCharacter, sanitizeImportedCharacter } from "@/utils/character";
 import type { Campaign, Character } from "@/types";
 import styles from "./page.module.scss";
 
@@ -64,21 +64,12 @@ function Dashboard() {
     setBusy(true);
     setError("");
     try {
-      const parsed = JSON.parse(await file.text()) as Record<string, unknown>;
+      if (file.size > 1_000_000) throw new Error("demasiado grande");
+      const parsed = JSON.parse(await file.text());
       const blank = createBlankCharacter(user.uid, user.displayName ?? "Aventurero");
-      // Solo se aceptan los campos que existen en una ficha, nunca los de cuenta
-      const PROTECTED = new Set([
-        "ownerUid",
-        "ownerName",
-        "campaignId",
-        "createdAt",
-        "updatedAt",
-      ]);
-      const data = { ...blank } as Record<string, unknown>;
-      for (const key of Object.keys(blank)) {
-        if (!PROTECTED.has(key) && key in parsed) data[key] = parsed[key];
-      }
-      const id = await createCharacter(data as typeof blank);
+      // Valida tipo a tipo: campos desconocidos fuera, números en rango,
+      // textos acotados y nunca datos de cuenta o campaña
+      const id = await createCharacter(sanitizeImportedCharacter(parsed, blank));
       router.push(`/characters/${id}`);
     } catch {
       setError("Ese archivo no parece un personaje exportado válido.");

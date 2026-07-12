@@ -37,6 +37,7 @@ export function CampaignJournal({ campaign, isDM }: { campaign: Campaign; isDM: 
             <textarea
               className="input"
               rows={3}
+              maxLength={5000}
               placeholder="Crónica de la sesión: qué pasó, pistas encontradas, deudas pendientes…"
               value={draft}
               onChange={(e) => setDraft(e.target.value)}

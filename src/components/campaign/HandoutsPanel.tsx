@@ -34,6 +34,10 @@ export function HandoutsPanel({ campaignId, isDM }: { campaignId: string; isDM: 
 
   const handleUpload = async (file: File | undefined) => {
     if (!file) return;
+    if (handouts.length >= 30) {
+      setError("Límite de 30 láminas por campaña: borra alguna antes de subir más.");
+      return;
+    }
     setBusy(true);
     setError("");
     try {

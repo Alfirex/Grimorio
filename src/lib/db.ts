@@ -283,7 +283,11 @@ export async function appendBoardLog(
   currentLog: BoardLogEntry[],
   text: string
 ): Promise<void> {
-  const entry: BoardLogEntry = { id: crypto.randomUUID(), text, timestamp: Date.now() };
+  const entry: BoardLogEntry = {
+    id: crypto.randomUUID(),
+    text: text.slice(0, 500),
+    timestamp: Date.now(),
+  };
   await updateDoc(doc(getDb(), "campaigns", campaignId), {
     boardLog: [entry, ...currentLog].slice(0, MAX_BOARD_LOG),
   });
@@ -317,7 +321,11 @@ export async function appendBoardLogById(campaignId: string, text: string): Prom
   const snapshot = await getDoc(ref);
   if (!snapshot.exists()) return;
   const current = (snapshot.data().boardLog ?? []) as BoardLogEntry[];
-  const entry: BoardLogEntry = { id: crypto.randomUUID(), text, timestamp: Date.now() };
+  const entry: BoardLogEntry = {
+    id: crypto.randomUUID(),
+    text: text.slice(0, 500),
+    timestamp: Date.now(),
+  };
   await updateDoc(ref, { boardLog: [entry, ...current].slice(0, MAX_BOARD_LOG) });
 }
 
@@ -385,7 +393,7 @@ export async function addHandout(
   image: string
 ): Promise<void> {
   await addDoc(collection(getDb(), "campaigns", campaignId, "handouts"), {
-    title,
+    title: title.slice(0, 100),
     image,
     revealed: false,
     createdAt: Date.now(),
@@ -412,7 +420,11 @@ export async function addJournalEntry(
   current: JournalEntry[],
   text: string
 ): Promise<void> {
-  const entry: JournalEntry = { id: crypto.randomUUID(), text, timestamp: Date.now() };
+  const entry: JournalEntry = {
+    id: crypto.randomUUID(),
+    text: text.slice(0, 5000),
+    timestamp: Date.now(),
+  };
   await updateDoc(doc(getDb(), "campaigns", campaignId), {
     journal: [entry, ...current],
   });

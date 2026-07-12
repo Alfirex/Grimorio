@@ -56,6 +56,7 @@ export function NotesPanel({ characterId, isOwner, isDM }: NotesPanelProps) {
           <textarea
             className="input"
             rows={3}
+            maxLength={3000}
             placeholder="Escribe una nota sobre este personaje…"
             value={text}
             onChange={(e) => setText(e.target.value)}

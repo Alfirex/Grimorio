@@ -77,6 +77,142 @@ export function parseEquipmentText(text: string): Array<{ name: string; quantity
     });
 }
 
+const num = (value: unknown, min: number, max: number, fallback: number): number =>
+  typeof value === "number" && Number.isFinite(value)
+    ? Math.min(max, Math.max(min, Math.round(value)))
+    : fallback;
+
+const str = (value: unknown, max: number, fallback = ""): string =>
+  typeof value === "string" ? value.slice(0, max) : fallback;
+
+const strArray = (value: unknown, maxItems: number, maxLen: number): string[] =>
+  Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string").slice(0, maxItems).map((item) => item.slice(0, maxLen))
+    : [];
+
+/**
+ * Sanea un personaje importado desde JSON: solo acepta los campos de una
+ * ficha, con sus tipos correctos, longitudes acotadas y números en rango.
+ * Cualquier cosa rara se descarta y se usa el valor de la ficha en blanco.
+ */
+export function sanitizeImportedCharacter(
+  raw: unknown,
+  blank: Omit<Character, "id">
+): Omit<Character, "id"> {
+  const data = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  const abilities = (data.abilities ?? {}) as Record<string, unknown>;
+  const money = (data.money ?? {}) as Record<string, unknown>;
+  const saves = (data.deathSaves ?? {}) as Record<string, unknown>;
+
+  const abilityKeys: AbilityKey[] = ["str", "dex", "con", "int", "wis", "cha"];
+  const spellcasting = abilityKeys.includes(data.spellcastingAbility as AbilityKey)
+    ? (data.spellcastingAbility as AbilityKey)
+    : "";
+
+  return {
+    ...blank,
+    name: str(data.name, 80),
+    // Firestore no admite undefined: el avatar solo se incluye si es válido
+    ...(typeof data.avatar === "string" && data.avatar.startsWith("data:image/")
+      ? { avatar: data.avatar.slice(0, 300_000) }
+      : {}),
+    race: str(data.race, 40, blank.race),
+    characterClass: str(data.characterClass, 40, blank.characterClass),
+    subclass: str(data.subclass, 60),
+    level: num(data.level, 1, 20, 1),
+    background: str(data.background, 40, blank.background),
+    alignment: str(data.alignment, 30, blank.alignment),
+    deity: str(data.deity, 60),
+    xp: num(data.xp, 0, 999_999, 0),
+    abilities: {
+      str: num(abilities.str, 1, 30, 10),
+      dex: num(abilities.dex, 1, 30, 10),
+      con: num(abilities.con, 1, 30, 10),
+      int: num(abilities.int, 1, 30, 10),
+      wis: num(abilities.wis, 1, 30, 10),
+      cha: num(abilities.cha, 1, 30, 10),
+    },
+    savingThrowProfs: strArray(data.savingThrowProfs, 6, 10).filter((key) =>
+      abilityKeys.includes(key as AbilityKey)
+    ) as AbilityKey[],
+    skillProfs: strArray(data.skillProfs, 30, 30),
+    skillExpertise: strArray(data.skillExpertise, 30, 30),
+    armorClass: num(data.armorClass, 0, 40, 10),
+    initiativeBonus: num(data.initiativeBonus, -10, 20, 0),
+    speed: num(data.speed, 0, 200, 30),
+    maxHp: num(data.maxHp, 1, 999, 10),
+    currentHp: num(data.currentHp, 0, 999, 10),
+    tempHp: num(data.tempHp, 0, 999, 0),
+    hitDiceTotal: num(data.hitDiceTotal, 1, 20, 1),
+    hitDiceUsed: num(data.hitDiceUsed, 0, 20, 0),
+    deathSaves: {
+      successes: num(saves.successes, 0, 3, 0),
+      failures: num(saves.failures, 0, 3, 0),
+    },
+    inspiration: data.inspiration === true,
+    attacks: (Array.isArray(data.attacks) ? data.attacks : [])
+      .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
+      .slice(0, 20)
+      .map((item) => ({
+        id: crypto.randomUUID(),
+        name: str(item.name, 60),
+        bonus: str(item.bonus, 10),
+        damage: str(item.damage, 20),
+        type: str(item.type, 120),
+        ...(typeof item.range === "number" && Number.isFinite(item.range)
+          ? { range: num(item.range, 5, 5280, 5) }
+          : {}),
+      })),
+    spellcastingAbility: spellcasting,
+    spellSlots: Array.from({ length: 9 }, (_, i) => {
+      const slot = (Array.isArray(data.spellSlots) ? data.spellSlots[i] : null) as
+        | Record<string, unknown>
+        | null;
+      const total = num(slot?.total, 0, 9, 0);
+      return { total, used: num(slot?.used, 0, total, 0) };
+    }),
+    spells: (Array.isArray(data.spells) ? data.spells : [])
+      .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
+      .slice(0, 80)
+      .map((item) => ({
+        id: crypto.randomUUID(),
+        name: str(item.name, 60),
+        level: num(item.level, 0, 9, 0),
+        prepared: item.prepared === true,
+        description: str(item.description, 300),
+      })),
+    money: {
+      cp: num(money.cp, 0, 999_999, 0),
+      sp: num(money.sp, 0, 999_999, 0),
+      ep: num(money.ep, 0, 999_999, 0),
+      gp: num(money.gp, 0, 999_999, 0),
+      pp: num(money.pp, 0, 999_999, 0),
+    },
+    equipment: str(data.equipment, 5000),
+    inventory: (Array.isArray(data.inventory) ? data.inventory : [])
+      .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
+      .slice(0, 100)
+      .map((item) => ({
+        id: crypto.randomUUID(),
+        name: str(item.name, 80),
+        quantity: num(item.quantity, 1, 999, 1),
+        weight: typeof item.weight === "number" && Number.isFinite(item.weight)
+          ? Math.min(10_000, Math.max(0, item.weight))
+          : 0,
+        notes: str(item.notes, 200),
+        equipped: item.equipped === true,
+      })),
+    personality: str(data.personality, 2000),
+    ideals: str(data.ideals, 2000),
+    bonds: str(data.bonds, 2000),
+    flaws: str(data.flaws, 2000),
+    appearance: str(data.appearance, 2000),
+    backstory: str(data.backstory, 20_000),
+    featuresAndTraits: str(data.featuresAndTraits, 20_000),
+    otherProficiencies: str(data.otherProficiencies, 5000),
+  };
+}
+
 export function createBlankCharacter(ownerUid: string, ownerName: string): Omit<Character, "id"> {
   const now = Date.now();
   return {

@@ -554,7 +554,8 @@ export function BoardView({ campaign, characters, isDM }: BoardViewProps) {
       });
     }
     // Los PX se reparten entre todos los personajes de la campaña
-    const xpEach = characters.length > 0 ? Math.ceil(totalXp / characters.length) : 0;
+    const xpEach =
+      characters.length > 0 ? Math.min(50_000, Math.ceil(totalXp / characters.length)) : 0;
     if (xpEach > 0) {
       for (const character of characters) {
         await updateCharacter(character.id, { xp: character.xp + xpEach });
