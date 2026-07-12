@@ -80,7 +80,7 @@ export function Footer() {
           >
             dnd.wizards.com/resources/systems-reference-document
           </a>
-          . El SRD 5.1 se ofrece bajo la licencia{" "}
+          , traducido y adaptado por Grimorio. El SRD 5.1 se ofrece bajo la licencia{" "}
           <a
             href="https://creativecommons.org/licenses/by/4.0/legalcode"
             rel="noopener noreferrer"

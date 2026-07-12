@@ -38,7 +38,7 @@ export default function RootLayout({
           <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-6">{children}</main>
           {/* Atribución CC BY del SRD también en las impresiones (el pie normal no se imprime) */}
           <p className="print-attribution" aria-hidden>
-            Incluye material del System Reference Document 5.1 de Wizards of the Coast LLC,
+            Incluye material del System Reference Document 5.1 de Wizards of the Coast LLC, traducido y adaptado,
             bajo licencia Creative Commons Attribution 4.0
             (creativecommons.org/licenses/by/4.0). Grimorio no está afiliado a Wizards of
             the Coast.

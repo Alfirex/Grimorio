@@ -111,7 +111,8 @@ y compártelo libremente.
   [dnd.wizards.com/resources/systems-reference-document](https://dnd.wizards.com/resources/systems-reference-document)
   y licenciado bajo
   [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/legalcode).
-  La atribución exigida por la licencia se muestra en el pie de todas las páginas.
+  La atribución exigida por la licencia (con la indicación de que el material está
+  traducido y adaptado) se muestra en el pie de todas las páginas.
 - Solo se usa contenido del SRD: una subclase por clase, las razas y conjuros del SRD y
   criaturas del SRD. El panteón de deidades, los rasgos de trasfondo y todos los textos
   descriptivos son **originales de Grimorio**.
