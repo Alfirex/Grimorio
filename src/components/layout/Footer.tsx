@@ -56,6 +56,11 @@ export function Footer() {
           <p>Contenido del SRD 5.1 (CC BY 4.0).</p>
           <p>Fichas, tableros y dados en tiempo real.</p>
           <p>Gratis para tu grupo de aventureros.</p>
+          <p>
+            <Link href="/privacidad" className={styles.legalLink}>
+              Política de privacidad
+            </Link>
+          </p>
         </div>
       </div>
 

@@ -127,6 +127,8 @@ La app trae integración con **Google AdSense** desactivada por defecto. Para ac
    «Privacidad y mensajes», el **mensaje de consentimiento** (obligatorio para visitantes
    de la UE por el RGPD). Sin la variable de entorno, la app no carga ningún script de
    anuncios.
+5. La app incluye una **política de privacidad** en `/privacidad` (enlazada desde el
+   pie), requisito de las políticas de AdSense; revísala y añade tu forma de contacto.
 
 ### Alojamiento gratuito compatible con anuncios
 
