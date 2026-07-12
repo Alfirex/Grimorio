@@ -126,24 +126,35 @@ function generateInviteCode(): string {
   ).join("");
 }
 
+/** Elige un código que no esté ya ocupado por otra campaña. */
+async function reserveInviteCode(): Promise<string> {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const code = generateInviteCode();
+    const existing = await getDoc(doc(getDb(), "invites", code));
+    if (!existing.exists()) return code;
+  }
+  throw new Error("No se pudo generar un código de invitación libre.");
+}
+
 export async function createCampaign(
   name: string,
   description: string,
   dmUid: string,
   dmName: string
 ): Promise<string> {
+  const inviteCode = await reserveInviteCode();
   const campaign: Omit<Campaign, "id"> = {
     name,
     description,
     dmUid,
     dmName,
-    inviteCode: generateInviteCode(),
+    inviteCode,
     memberUids: [dmUid],
     createdAt: Date.now(),
   };
   const ref = await addDoc(collection(getDb(), "campaigns"), campaign);
   // El código se resuelve en /invites: así las campañas solo las leen sus miembros
-  await setDoc(doc(getDb(), "invites", campaign.inviteCode), { campaignId: ref.id });
+  await setDoc(doc(getDb(), "invites", inviteCode), { campaignId: ref.id });
   return ref.id;
 }
 

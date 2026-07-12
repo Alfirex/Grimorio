@@ -66,11 +66,21 @@ service cloud.firestore {
       allow get: if signedIn();
       allow list: if false;
 
-      // Solo el máster de la campaña referida puede publicar o retirar su código
-      allow create, update: if signedIn() &&
+      // Publicar un código nuevo: solo el máster de la campaña referida
+      allow create: if signedIn() &&
         request.resource.data.keys().hasOnly(['campaignId']) &&
         get(/databases/$(database)/documents/campaigns/$(request.resource.data.campaignId))
           .data.dmUid == request.auth.uid;
+
+      // Sobrescribir un código existente exige ser el máster de la campaña a la
+      // que YA apunta (impide secuestrar códigos ajenos hacia otra campaña)
+      allow update: if signedIn() &&
+        request.resource.data.keys().hasOnly(['campaignId']) &&
+        get(/databases/$(database)/documents/campaigns/$(resource.data.campaignId))
+          .data.dmUid == request.auth.uid &&
+        get(/databases/$(database)/documents/campaigns/$(request.resource.data.campaignId))
+          .data.dmUid == request.auth.uid;
+
       allow delete: if signedIn() &&
         get(/databases/$(database)/documents/campaigns/$(resource.data.campaignId))
           .data.dmUid == request.auth.uid;
