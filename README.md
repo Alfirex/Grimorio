@@ -89,6 +89,16 @@ Las reglas de `firestore.rules` garantizan que:
 - Migración: si una campaña se creó con reglas antiguas, su máster solo tiene que abrirla
   una vez para que el código de invitación vuelva a funcionar.
 
+Las reglas están **cubiertas por tests contra el emulador de Firestore** (lecturas por
+rol, secuestro de invitaciones, topes de PX y de tamaño, notas privadas, láminas
+ocultas…). Se ejecutan con:
+
+```bash
+npm run test:rules   # requiere Java 11+ (el emulador lo usa)
+```
+
+El CI los ejecuta en cada push junto con el resto de la suite.
+
 ## Licencia
 
 El **código** de Grimorio se publica bajo la [licencia MIT](./LICENSE): úsalo, modifícalo
